@@ -1,0 +1,95 @@
+import React from 'react';
+
+export function Card({ children, style, ...rest }) {
+  return (
+    <div
+      style={{
+        background: '#ffffff', border: '1px solid #e5e2d6', borderRadius: 16,
+        padding: 24, boxShadow: '0 1px 0 rgba(17,17,17,0.03), 0 4px 12px rgba(17,17,17,0.03)',
+        ...style,
+      }}
+      {...rest}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function SectionTitle({ children, subtitle }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <h3 style={{
+        fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 20,
+        margin: 0, color: '#111',
+      }}>{children}</h3>
+      {subtitle && (
+        <p style={{ margin: '4px 0 0', color: '#66645c', fontSize: 14 }}>{subtitle}</p>
+      )}
+    </div>
+  );
+}
+
+export function Label({ children }) {
+  return (
+    <label style={{
+      display: 'block', fontSize: 13.5, fontWeight: 600, color: '#3a3833',
+      marginBottom: 6,
+    }}>{children}</label>
+  );
+}
+
+export function Button({ children, variant = 'primary', style, disabled, ...rest }) {
+  const styles = {
+    primary: {
+      background: disabled ? '#a7a49a' : '#111', color: '#fff',
+      boxShadow: disabled ? 'none' : '0 8px 20px rgba(17,17,17,0.18)',
+    },
+    teal: {
+      background: disabled ? '#a7a49a' : '#00C5B0', color: '#111',
+      boxShadow: disabled ? 'none' : '0 8px 20px rgba(0,197,176,0.28)',
+    },
+    ghost: {
+      background: 'transparent', color: '#111', border: '1px solid #e5e2d6',
+    },
+  }[variant];
+  return (
+    <button
+      disabled={disabled}
+      style={{
+        borderRadius: 12, padding: '11px 22px', fontSize: 14.5, fontWeight: 700,
+        border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
+        transition: 'transform .15s ease, box-shadow .15s ease, opacity .15s ease',
+        opacity: disabled ? 0.7 : 1,
+        ...styles,
+        ...style,
+      }}
+      {...rest}
+    >{children}</button>
+  );
+}
+
+export function ProgressBar({ value = 0, label }) {
+  return (
+    <div>
+      {label && <div style={{ fontSize: 13, color: '#66645c', marginBottom: 6 }}>{label}</div>}
+      <div style={{
+        width: '100%', height: 8, background: '#e5e2d6', borderRadius: 999, overflow: 'hidden',
+      }}>
+        <div style={{
+          width: `${Math.min(100, Math.max(0, value))}%`, height: '100%',
+          background: 'linear-gradient(90deg,#00C5B0,#0A0F1E)', transition: 'width .3s ease',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+export function Badge({ children, color = '#00C5B0' }) {
+  return (
+    <span style={{
+      display: 'inline-block', padding: '3px 10px', borderRadius: 999,
+      fontSize: 11.5, fontWeight: 700, letterSpacing: '.05em', background: color,
+      color: color === '#00C5B0' ? '#111' : '#fff',
+    }}>{children}</span>
+  );
+}

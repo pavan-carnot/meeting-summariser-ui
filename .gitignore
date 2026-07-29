@@ -1,0 +1,10 @@
+node_modules
+dist
+.env.local
+.DS_Store
+
+# Claude
+.claude/
+CLAUDE.md
+.claude.json
+claude.md
