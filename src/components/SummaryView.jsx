@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Download, FileJson, FileText, ChevronDown, ChevronRight } from 'lucide-react';
-import { Card, SectionTitle, Button, Badge } from './Card.jsx';
+import { Card, Button, Badge } from './Card.jsx';
 
 const priorityColor = (p) => {
   const key = (p || 'medium').toLowerCase();
@@ -69,11 +69,8 @@ export default function SummaryView({ summary, transcript }) {
 
   return (
     <Card>
-      {/* Header: title + downloads */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
-        <SectionTitle subtitle="Your meeting minutes, action items, and speaker breakdown.">
-          Results
-        </SectionTitle>
+      {/* Download bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Button variant="ghost" onClick={() => downloadBlob('meeting_summary.json', JSON.stringify(summary, null, 2), 'application/json')}>
             <FileJson size={14} style={{ display: 'inline-block', marginRight: 6 }} />

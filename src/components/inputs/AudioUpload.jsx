@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Upload, X } from 'lucide-react';
-import { Card, SectionTitle, Label, Button, ProgressBar } from '../Card.jsx';
+import { Card, Label, Button, ProgressBar } from '../Card.jsx';
 import { uploadAudio, pollJob } from '../../api/client.js';
 
 export default function AudioUpload({ languages, onComplete }) {
@@ -116,10 +116,6 @@ export default function AudioUpload({ languages, onComplete }) {
 
   return (
     <Card>
-      <SectionTitle subtitle="Upload a WAV, MP3, or M4A recording. The system will transcribe it and identify speakers automatically.">
-        Upload Audio
-      </SectionTitle>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <div>
           <Label>Audio language</Label>

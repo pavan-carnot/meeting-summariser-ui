@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { FileUp, X } from 'lucide-react';
-import { Card, SectionTitle, Button } from '../Card.jsx';
+import { Card, Button } from '../Card.jsx';
 import { uploadText } from '../../api/client.js';
 
 export default function UploadText({ onLoaded }) {
@@ -32,10 +32,6 @@ export default function UploadText({ onLoaded }) {
 
   return (
     <Card>
-      <SectionTitle subtitle="Upload a .txt transcript. Participants are auto-detected.">
-        Upload Text File
-      </SectionTitle>
-
       <div
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => { e.preventDefault(); pick(e.dataTransfer.files?.[0]); }}

@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
-import { Card, SectionTitle, Label } from '../Card.jsx';
+import { Card, Label } from '../Card.jsx';
 
 export default function PasteText({ onChange }) {
   const [text, setText] = useState('');
 
   return (
     <Card>
-      <SectionTitle subtitle="Paste your meeting transcript. Names/roles at the start of lines are auto-detected as participants.">
-        Paste Text
-      </SectionTitle>
       <Label>Meeting transcript</Label>
       <textarea
         value={text}

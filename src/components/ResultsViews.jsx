@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Play, Pause, Download, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { Card, SectionTitle } from './Card.jsx';
+import { Card } from './Card.jsx';
 
 function fmtTime(secs) {
   if (secs == null || Number.isNaN(secs)) return '--:--';
@@ -48,9 +48,6 @@ export function AudioPlayerView({ audioBlob, audioUrl }) {
   if (!audioUrl) {
     return (
       <Card>
-        <SectionTitle subtitle="This view appears once you've uploaded or recorded audio.">
-          Audio
-        </SectionTitle>
         <div style={emptyStyle}>No audio available — this session used a text transcript.</div>
       </Card>
     );
@@ -73,19 +70,16 @@ export function AudioPlayerView({ audioBlob, audioUrl }) {
 
   return (
     <Card>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <SectionTitle subtitle="Play, seek, and download the original recording.">
-          Audio
-        </SectionTitle>
-        {audioBlob && (
+      {audioBlob && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
           <button onClick={download} style={ghostBtn}>
             <Download size={14} style={{ marginRight: 6 }} /> Download
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div style={{
-        marginTop: 6, background: 'linear-gradient(150deg,#0A0F1E 0%,#1a2136 100%)',
+        background: 'linear-gradient(150deg,#0A0F1E 0%,#1a2136 100%)',
         borderRadius: 18, padding: '28px 26px', color: '#fff',
         display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap',
       }}>
@@ -178,7 +172,6 @@ export function ConfidenceView({ transcriptData, onOpenTranscript }) {
   if (!segments.length) {
     return (
       <Card>
-        <SectionTitle>Confidence Scores</SectionTitle>
         <div style={emptyStyle}>Confidence scores appear only for audio transcribed by Whisper.</div>
       </Card>
     );
@@ -186,10 +179,6 @@ export function ConfidenceView({ transcriptData, onOpenTranscript }) {
 
   return (
     <Card>
-      <SectionTitle subtitle="How confident Whisper is in each part of the transcript.">
-        Confidence Scores
-      </SectionTitle>
-
       {/* Headline metrics */}
       {metrics && metrics.average != null && (
         <div style={{

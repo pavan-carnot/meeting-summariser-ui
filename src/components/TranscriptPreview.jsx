@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Play, Pause, Pencil, Check, X, ChevronDown } from 'lucide-react';
-import { Card, SectionTitle } from './Card.jsx';
+import { Card } from './Card.jsx';
 
 // ── Confidence → colour helpers (mirrors backend/app.py) ────────────────
 function confColor(c) {
@@ -192,9 +192,9 @@ export default function TranscriptPreview({
   return (
     <Card>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 12 }}>
-        <SectionTitle subtitle="Play the audio to follow along. Colours show Whisper confidence — hover any word for its exact score.">
-          Transcript & Playback
-        </SectionTitle>
+        <div style={{ fontSize: 13, color: '#66645c' }}>
+          Colours show Whisper confidence — hover any word for its exact score.
+        </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {!editing ? (
             <button onClick={() => setEditing(true)} style={btnGhost}>

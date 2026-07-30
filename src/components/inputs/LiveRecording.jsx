@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Mic, Square } from 'lucide-react';
-import { Card, SectionTitle, Label, Button, ProgressBar } from '../Card.jsx';
+import { Card, Label, Button, ProgressBar } from '../Card.jsx';
 import { uploadAudio, pollJob } from '../../api/client.js';
 
 // Records browser microphone using MediaRecorder → uploads as a normal audio file
@@ -124,10 +124,6 @@ export default function LiveRecording({ languages, onComplete }) {
 
   return (
     <Card>
-      <SectionTitle subtitle="Record audio directly from your microphone. When you stop, the audio is transcribed and summarized.">
-        Real-Time Audio
-      </SectionTitle>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <div>
           <Label>Audio language</Label>
