@@ -36,30 +36,32 @@ export default function Sidebar({
       overflowY: 'auto',
     }}>
       <div style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 9,
-            background: '#0A0F1E', color: '#00C5B0',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 15,
-          }}>M</div>
-          <div style={{
-            fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 15,
-            color: '#0A0F1E', letterSpacing: '-0.01em',
-          }}>Meeting Summariser</div>
-        </div>
         <Link
           to="/"
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             color: '#66645c', fontSize: 12.5, fontWeight: 500,
             textDecoration: 'none', padding: '4px 8px 4px 4px',
-            borderRadius: 6,
+            borderRadius: 6, marginBottom: 12,
           }}
         >
           <ArrowLeft size={13} />
           Back to home
         </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img
+            src="/icarkno%20logo.png"
+            alt="icarKno"
+            style={{
+              width: 34, height: 34, flexShrink: 0,
+              objectFit: 'contain', borderRadius: 9,
+            }}
+          />
+          <div style={{
+            fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 15,
+            color: '#0A0F1E', letterSpacing: '-0.01em',
+          }}>Meeting Summariser</div>
+        </div>
       </div>
 
       <button

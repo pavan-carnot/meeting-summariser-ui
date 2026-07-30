@@ -154,12 +154,45 @@ function FlowArrow() {
 // Layout tokens for the sticky Features section.
 // The navbar is now flush to top: 0 with ~78px total height (12px pad + pill),
 // so the pinned Features heading starts just below it.
-const NAVBAR_BOTTOM = 120;                       // where the pinned heading starts (bigger gap under navbar when scrolled)
-const HEADER_HEIGHT = 128;                       // vertical space the heading takes
-const CARD_TOP      = NAVBAR_BOTTOM + HEADER_HEIGHT + 16; // where each card locks
-const CARD_MIN_H    = 380;                       // smaller than before
+// The navbar sits at top:0 with ~78px total height. Cards lock a short
+// distance below it. (The section heading is no longer sticky, so
+// NAVBAR_BOTTOM and HEADER_HEIGHT are just used to derive CARD_TOP.)
+const NAVBAR_BOTTOM = 120;
+const HEADER_HEIGHT = 128;
+const CARD_TOP      = NAVBAR_BOTTOM + HEADER_HEIGHT + 36; // where each card locks (extra gap so the drop shadow above is visible)
+const CARD_MIN_H    = 380;
 
 function FeaturesSection({ features }) {
+  // JS-controlled sticky heading.
+  // Sticky-CSS can't align the heading and cards' unpin points (they have
+  // different `top` values, so they unpin at different scroll positions).
+  // Instead: track the section's bounding rect on scroll and toggle sticky
+  // OFF the instant the last card would unpin. Heading + cards then scroll
+  // out of the section together — no overlap possible.
+  const sectionRef = useRef(null);
+  const [headingPinned, setHeadingPinned] = useState(false);
+  const unpinThreshold = CARD_TOP + CARD_MIN_H; // matches when cards unpin
+
+  useEffect(() => {
+    const check = () => {
+      const el = sectionRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      // Pin only while:
+      //   - the section has been scrolled up to the pinning line, AND
+      //   - the section's bottom is still below the cards' unpin threshold
+      //     (so the last card is still stacking; heading belongs above it)
+      setHeadingPinned(rect.top <= NAVBAR_BOTTOM && rect.bottom > unpinThreshold);
+    };
+    check();
+    window.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('resize', check);
+    return () => {
+      window.removeEventListener('scroll', check);
+      window.removeEventListener('resize', check);
+    };
+  }, [unpinThreshold]);
+
   const palettes = [
     { bg: 'linear-gradient(150deg,#0A0F1E 0%,#1a2136 100%)', color: '#fff', accent: '#00C5B0', muted: 'rgba(255,255,255,0.75)', chipBg: 'rgba(0,197,176,0.14)' },
     { bg: 'linear-gradient(150deg,#00C5B0 0%,#00a795 100%)', color: '#0A0F1E', accent: '#0A0F1E', muted: 'rgba(10,15,30,0.75)', chipBg: 'rgba(10,15,30,0.10)' },
@@ -171,23 +204,30 @@ function FeaturesSection({ features }) {
 
   return (
     <section
+      ref={sectionRef}
       id="features"
       style={{
-        // The trailing spacer already provides the last card's sticky
-        // duration; a modest bottom margin then hands off cleanly to the
-        // next section. Margin is outside the sticky region, so the
-        // heading + last card unpin exactly at the section boundary.
-        maxWidth: 1180, margin: '130px auto 60px', padding: '0 24px',
+        maxWidth: 1180, margin: '130px auto 140px', padding: '0 24px',
         position: 'relative',
       }}
     >
-      {/* PINNED HEADING — sits below the floating navbar, centered */}
+      {/* SECTION HEADING.
+          Two synchronized elements:
+          1. A `position: fixed` overlay pinned at the top of the viewport
+             while `headingPinned` is true. Fixed (not sticky) so it can be
+             switched off cleanly the instant the last card would unpin.
+          2. An in-flow placeholder with the heading's natural height so the
+             cards start at the right position whether or not we're pinned.
+          When we're NOT pinned, the placeholder itself shows the heading
+          text — so the heading is visible before scroll-in and after
+          scroll-out. When we ARE pinned, the placeholder is empty and the
+          fixed overlay is what the user sees. */}
       <div style={{
-        position: 'sticky', top: NAVBAR_BOTTOM, zIndex: 20,
-        background: 'linear-gradient(to bottom,#efeee8 0%,#efeee8 78%,rgba(239,238,232,0) 100%)',
         padding: '20px 0 22px',
+        marginBottom: 16,
         minHeight: HEADER_HEIGHT,
         boxSizing: 'border-box',
+        visibility: headingPinned ? 'hidden' : 'visible',
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.1em', color: '#9a978d', marginBottom: 10 }}>
@@ -199,6 +239,24 @@ function FeaturesSection({ features }) {
           }}>Built for how teams actually meet</h2>
         </div>
       </div>
+      {headingPinned && (
+        <div style={{
+          position: 'fixed', top: NAVBAR_BOTTOM, left: 0, right: 0, zIndex: 20,
+          background: '#efeee8',
+          padding: '20px 0 22px',
+          pointerEvents: 'none',
+        }}>
+          <div style={{ textAlign: 'center', maxWidth: 1180, margin: '0 auto', padding: '0 24px' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.1em', color: '#9a978d', marginBottom: 10 }}>
+              WHY TEAMS USE IT
+            </div>
+            <h2 style={{
+              fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 42,
+              letterSpacing: '-0.02em', margin: 0, color: '#0A0F1E',
+            }}>Built for how teams actually meet</h2>
+          </div>
+        </div>
+      )}
 
       {/* STACKING CARDS.
           A trailing spacer with height ≥ CARD_MIN_H gives the LAST card
@@ -221,7 +279,9 @@ function FeaturesSection({ features }) {
                 borderRadius: 24,
                 padding: '38px 44px',
                 minHeight: CARD_MIN_H,
-                boxShadow: '0 24px 56px rgba(17,17,17,0.16), 0 2px 0 rgba(17,17,17,0.04)',
+                // Ambient glow (0 offset) so the shadow reads on the top edge
+                // too — the previous 24px-down shadow was clipped above.
+                boxShadow: '0 0 40px rgba(17,17,17,0.10), 0 20px 44px rgba(17,17,17,0.14)',
                 display: 'grid',
                 gridTemplateColumns: '1fr 1.25fr',
                 gap: 36,
