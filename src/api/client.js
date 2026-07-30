@@ -1,10 +1,40 @@
 import axios from 'axios';
 
+// In dev, we leave baseURL empty so the Vite proxy (/api → backend) handles it.
+// In production, VITE_API_URL from .env is the direct backend origin.
+const BASE_URL = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '');
+
+console.log('[api] baseURL:', BASE_URL || '(dev proxy /api → backend)',
+            '| VITE_API_URL:', import.meta.env.VITE_API_URL,
+            '| DEV:', import.meta.env.DEV);
+
 const api = axios.create({
-  baseURL: '',
+  baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 300000,
 });
+
+// ── Request / response tracing ─────────────────────────────
+api.interceptors.request.use((cfg) => {
+  const method = (cfg.method || 'GET').toUpperCase();
+  console.log(`[api] → ${method} ${cfg.baseURL || ''}${cfg.url}`);
+  cfg.metadata = { start: performance.now() };
+  return cfg;
+});
+api.interceptors.response.use(
+  (res) => {
+    const ms = (performance.now() - (res.config.metadata?.start || 0)).toFixed(0);
+    console.log(`[api] ← ${res.status} ${res.config.url}  (${ms}ms)`);
+    return res;
+  },
+  (err) => {
+    const cfg = err.config || {};
+    const ms = (performance.now() - (cfg.metadata?.start || 0)).toFixed(0);
+    console.error(`[api] ✗ ${err.response?.status || err.code || 'ERR'} ${cfg.url}  (${ms}ms)`,
+      { message: err.message, data: err.response?.data });
+    return Promise.reject(err);
+  },
+);
 
 // ── Core meeting APIs ─────────────────────────────────────
 export async function getLanguages() {
@@ -78,18 +108,26 @@ export async function getJob(jobId) {
 }
 
 // Poll a job until it completes/fails. Calls onUpdate on each poll.
-export async function pollJob(jobId, { intervalMs = 1000, onUpdate } = {}) {
+export async function pollJob(jobId, { intervalMs = 1500, onUpdate } = {}) {
   return new Promise((resolve, reject) => {
+    let attempt = 0;
     const tick = async () => {
+      attempt += 1;
       try {
         const status = await getJob(jobId);
         if (onUpdate) onUpdate(status);
-        const s = (status.status || '').toLowerCase();
+        const s = String(status.status || '').toLowerCase();
         if (s === 'completed') return resolve(status);
-        if (s === 'failed') return reject(new Error(status.error || status.status_message || 'Job failed'));
+        if (s === 'failed') return reject(new Error(status.error || status.status_message || `Job ${jobId} failed`));
         setTimeout(tick, intervalMs);
       } catch (err) {
-        reject(err);
+        // Give the server a few chances before giving up on transient errors
+        if (attempt < 3) {
+          console.warn(`[pollJob] transient error on attempt ${attempt}, retrying …`, err.message);
+          setTimeout(tick, intervalMs);
+        } else {
+          reject(new Error(`Job poll failed for ${jobId}: ${err.message}`));
+        }
       }
     };
     tick();

@@ -1,32 +1,33 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import InputMethodTabs from '../components/InputMethodTabs.jsx';
 import AudioUpload from '../components/inputs/AudioUpload.jsx';
 import LiveRecording from '../components/inputs/LiveRecording.jsx';
 import PasteText from '../components/inputs/PasteText.jsx';
 import UploadText from '../components/inputs/UploadText.jsx';
-import ParticipantsContext from '../components/ParticipantsContext.jsx';
 import TranscriptPreview from '../components/TranscriptPreview.jsx';
 import SummaryView from '../components/SummaryView.jsx';
 import FollowUpEmails from '../components/FollowUpEmails.jsx';
 import Sidebar from '../components/Sidebar.jsx';
-import { Card, SectionTitle, ProgressBar } from '../components/Card.jsx';
+import ResultsTabs from '../components/ResultsTabs.jsx';
+import GenerateBar from '../components/GenerateBar.jsx';
+import { AudioPlayerView, ConfidenceView } from '../components/ResultsViews.jsx';
+import { Card, SectionTitle } from '../components/Card.jsx';
 import {
   getLanguages, extractParticipants, summarize, pollJob,
 } from '../api/client.js';
 
+const INPUT_VIEWS = new Set(['audio', 'realtime', 'paste', 'text']);
+const RESULT_VIEWS = new Set(['audio-player', 'transcript', 'confidence', 'report']);
+
 export default function App() {
-  const [method, setMethod] = useState('audio');
+  const [activeView, setActiveView] = useState('audio'); // default landing view
   const [languages, setLanguages] = useState([{ code: 'auto', name: 'Auto-detect' }]);
 
-  // Transcript state (populated by any input method)
+  // Transcript state — persisted across view switches
   const [transcript, setTranscript] = useState('');
   const [transcriptData, setTranscriptData] = useState(null);
   const [detectedLanguage, setDetectedLanguage] = useState(null);
   const [isLongRecording, setIsLongRecording] = useState(false);
 
-  // Audio blob for playback in TranscriptPreview
   const [audioBlob, setAudioBlob] = useState(null);
   const audioUrl = useMemo(() => (audioBlob ? URL.createObjectURL(audioBlob) : null), [audioBlob]);
   useEffect(() => () => { if (audioUrl) URL.revokeObjectURL(audioUrl); }, [audioUrl]);
@@ -40,16 +41,22 @@ export default function App() {
   const [summary, setSummary] = useState(null);
   const [summaryError, setSummaryError] = useState(null);
 
-  const resultsRef = useRef(null);
+  const hasTranscript = !!transcript.trim();
+  const hasSummary = !!summary;
 
   useEffect(() => { getLanguages().then(setLanguages); }, []);
+
+  // ── Input handlers ────────────────────────────────────────
+  const afterTranscriptReady = () => {
+    // Jump to Transcript & Playback so the user sees what was produced.
+    setActiveView('transcript');
+  };
 
   const handleTranscriptFromAudio = ({ transcript: t, transcriptData: td, language, audioBlob: blob }) => {
     setTranscript(t);
     setTranscriptData(td);
     setAudioBlob(blob || null);
     if (language) setDetectedLanguage(language);
-    // Auto-fill participants from speaker segments
     if (td?.transcript && Array.isArray(td.transcript)) {
       const speakers = new Set();
       td.transcript.forEach((seg) => {
@@ -57,13 +64,13 @@ export default function App() {
       });
       if (speakers.size) setParticipants([...speakers].sort().join(', '));
     }
+    afterTranscriptReady();
   };
 
   const handleTranscriptFromText = async (text) => {
     setTranscript(text);
     setTranscriptData(null);
     setAudioBlob(null);
-    // Try to auto-extract participants
     if (text?.trim()) {
       try {
         const detected = await extractParticipants(text);
@@ -77,16 +84,18 @@ export default function App() {
     setTranscriptData(null);
     setAudioBlob(null);
     if (p?.length) setParticipants(p.join(', '));
+    afterTranscriptReady();
   };
 
-  // Called from TranscriptPreview when user saves edits (speaker renames + text edits)
   const handleTranscriptEdit = (flatText, updatedData) => {
     setTranscript(flatText);
     setTranscriptData(updatedData);
     if (Array.isArray(updatedData?.transcript)) {
       const speakers = new Set();
       updatedData.transcript.forEach((seg) => {
-        if (seg.speaker !== undefined) speakers.add(String(seg.speaker).match(/^Speaker /) ? String(seg.speaker) : `Speaker ${seg.speaker}`);
+        if (seg.speaker !== undefined) {
+          speakers.add(String(seg.speaker).match(/^Speaker /) ? String(seg.speaker) : `Speaker ${seg.speaker}`);
+        }
       });
       if (speakers.size) setParticipants([...speakers].sort().join(', '));
     }
@@ -115,11 +124,8 @@ export default function App() {
           setSummaryStatus(s.status_message || s.status || 'Processing…');
         },
       });
-      const payload = final.result || final;
-      setSummary(payload);
-      requestAnimationFrame(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
+      setSummary(final.result || final);
+      setActiveView('report');
     } catch (e) {
       setSummaryError(e.message || 'Summary generation failed');
     } finally {
@@ -127,143 +133,204 @@ export default function App() {
     }
   };
 
+  const resetSession = () => {
+    if (hasTranscript || hasSummary) {
+      const ok = window.confirm('Discard the current transcript and summary, and start a new session?');
+      if (!ok) return;
+    }
+    setTranscript('');
+    setTranscriptData(null);
+    setAudioBlob(null);
+    setDetectedLanguage(null);
+    setIsLongRecording(false);
+    setParticipants('');
+    setAdditionalContext('');
+    setSummary(null);
+    setSummaryError(null);
+    setSummaryProgress(0);
+    setSummaryStatus('');
+    setActiveView('audio');
+  };
+
+  // Guard: if a result view is active but its data disappears, bounce back.
+  useEffect(() => {
+    if (RESULT_VIEWS.has(activeView) && !hasTranscript) setActiveView('audio');
+    if (activeView === 'report' && !hasSummary) setActiveView('transcript');
+  }, [activeView, hasTranscript, hasSummary]);
+
   return (
-    <div style={{ background: '#efeee8', minHeight: '100vh', paddingBottom: 60 }}>
-      {/* Page header */}
-      <div style={{
-        maxWidth: 1260, margin: '0 auto', padding: '32px 24px 16px',
-      }}>
-        <Link
-          to="/"
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            color: '#66645c', fontSize: 13.5, fontWeight: 500,
-            textDecoration: 'none', marginBottom: 14,
-            padding: '6px 10px 6px 6px', borderRadius: 8,
-            transition: 'background .15s ease, color .15s ease',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(17,17,17,0.04)'; e.currentTarget.style.color = '#111'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#66645c'; }}
-        >
-          <ArrowLeft size={15} />
-          Back to home
-        </Link>
-        <h1 style={{
-          fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 34,
-          letterSpacing: '-0.02em', margin: 0, color: '#0A0F1E',
-        }}>Meeting Summariser</h1>
-        <p style={{ color: '#66645c', fontSize: 15, margin: '6px 0 0' }}>
-          Upload audio, record live, or paste a transcript — get a summary, action items, and per-speaker breakdown.
-        </p>
-      </div>
+    <div style={{ background: '#efeee8', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', alignItems: 'stretch' }}>
+        <Sidebar
+          activeView={activeView}
+          onNavigate={setActiveView}
+          hasResults={hasTranscript}
+          onNewSession={resetSession}
+          onReturnToResults={() => setActiveView(hasSummary ? 'report' : 'transcript')}
+        />
 
-      <div style={{
-        maxWidth: 1260, margin: '0 auto', padding: '16px 24px',
-        display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 24,
-      }}>
-        {/* MAIN COLUMN */}
-        <div>
-          {/* Input method selector */}
-          <div style={{ marginBottom: 20 }}>
-            <InputMethodTabs value={method} onChange={setMethod} />
-          </div>
+        {/* MAIN PANE */}
+        <main style={{ flex: 1, minWidth: 0, padding: '32px 40px 60px' }}>
+          <ViewHeader
+            activeView={activeView}
+            hasResults={hasTranscript}
+            onReturnToResults={() => setActiveView(hasSummary ? 'report' : 'transcript')}
+          />
 
-          {/* Selected input */}
-          {method === 'audio' && (
+          {/* Horizontal result tabs — only shown while the user is inside the
+              results workspace (any of the 4 result views). */}
+          {RESULT_VIEWS.has(activeView) && (
+            <ResultsTabs
+              activeView={activeView}
+              onNavigate={setActiveView}
+              hasSummary={hasSummary}
+            />
+          )}
+
+          {/* Input views */}
+          {activeView === 'audio' && (
             <AudioUpload languages={languages} onComplete={handleTranscriptFromAudio} />
           )}
-          {method === 'realtime' && (
+          {activeView === 'realtime' && (
             <LiveRecording languages={languages} onComplete={handleTranscriptFromAudio} />
           )}
-          {method === 'paste' && (
-            <PasteText onChange={handleTranscriptFromText} />
+          {activeView === 'paste' && (
+            <>
+              <PasteText onChange={handleTranscriptFromText} />
+              {hasTranscript && (
+                <div style={{ marginTop: 12, textAlign: 'right' }}>
+                  <button onClick={afterTranscriptReady} style={primaryBtn}>Continue →</button>
+                </div>
+              )}
+            </>
           )}
-          {method === 'text' && (
+          {activeView === 'text' && (
             <UploadText onLoaded={handleTextLoaded} />
           )}
 
-          {/* Transcript: rich playback+editor when we have structured data,
-              simple text box otherwise (paste / text upload) */}
-          {transcriptData?.transcript?.length > 0 ? (
-            <div style={{ marginTop: 16 }}>
-              <TranscriptPreview
-                transcriptData={transcriptData}
-                audioSrc={audioUrl}
-                onTranscriptChange={handleTranscriptEdit}
+          {/* Result views */}
+          {activeView === 'audio-player' && (
+            <AudioPlayerView audioBlob={audioBlob} audioUrl={audioUrl} />
+          )}
+
+          {activeView === 'transcript' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <GenerateBar
+                participants={participants}
+                onParticipantsChange={setParticipants}
+                context={additionalContext}
+                onContextChange={setAdditionalContext}
+                isLongRecording={isLongRecording}
+                onLongRecordingChange={setIsLongRecording}
+                onSubmit={doSummarize}
+                canSubmit={canSubmit}
+                busy={summaryBusy}
+                progress={summaryProgress}
+                statusMessage={summaryStatus}
+                hasSummary={hasSummary}
               />
-            </div>
-          ) : transcript ? (
-            <div style={{ marginTop: 16 }}>
-              <Card>
-                <SectionTitle subtitle="Edit directly — participants and generated summary use this text.">
-                  Transcript ({transcript.length.toLocaleString()} chars)
-                </SectionTitle>
-                <textarea
-                  value={transcript}
-                  onChange={(e) => setTranscript(e.target.value)}
-                  style={{
-                    width: '100%', minHeight: 260, padding: 12, borderRadius: 10,
-                    border: '1px solid #d9d5c5', background: '#faf9f4',
-                    fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: 12.5,
-                    lineHeight: 1.55, whiteSpace: 'pre-wrap', color: '#333',
-                    resize: 'vertical', outline: 'none', boxSizing: 'border-box',
-                  }}
+              {summaryError && (
+                <div style={errorBox}>{summaryError}</div>
+              )}
+              {transcriptData?.transcript?.length > 0 ? (
+                <TranscriptPreview
+                  transcriptData={transcriptData}
+                  audioSrc={audioUrl}
+                  onTranscriptChange={handleTranscriptEdit}
                 />
-              </Card>
+              ) : (
+                <Card>
+                  <SectionTitle subtitle="Edit directly — participants and the generated summary use this text.">
+                    Transcript ({transcript.length.toLocaleString()} chars)
+                  </SectionTitle>
+                  <textarea
+                    value={transcript}
+                    onChange={(e) => setTranscript(e.target.value)}
+                    style={{
+                      width: '100%', minHeight: 300, padding: 12, borderRadius: 10,
+                      border: '1px solid #d9d5c5', background: '#faf9f4',
+                      fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: 12.5,
+                      lineHeight: 1.6, whiteSpace: 'pre-wrap', color: '#333',
+                      resize: 'vertical', outline: 'none', boxSizing: 'border-box',
+                    }}
+                  />
+                </Card>
+              )}
             </div>
-          ) : null}
+          )}
 
-          {/* Participants + Context */}
-          <div style={{ marginTop: 16 }}>
-            <ParticipantsContext
-              participants={participants}
-              onParticipantsChange={setParticipants}
-              context={additionalContext}
-              onContextChange={setAdditionalContext}
-              onSubmit={doSummarize}
-              canSubmit={canSubmit}
-              busy={summaryBusy}
+          {activeView === 'confidence' && (
+            <ConfidenceView
+              transcriptData={transcriptData}
+              onOpenTranscript={() => setActiveView('transcript')}
             />
-          </div>
-
-          {/* Long recording toggle for the summary path */}
-          <div style={{ marginTop: 6, textAlign: 'right', fontSize: 13, color: '#66645c' }}>
-            <label style={{ cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={isLongRecording}
-                onChange={(e) => setIsLongRecording(e.target.checked)}
-                style={{ marginRight: 6 }}
-              />
-              Use hierarchical summarization (long meeting)
-            </label>
-          </div>
-
-          {/* Summary progress + errors */}
-          {summaryBusy && (
-            <div style={{ marginTop: 16 }}>
-              <Card><ProgressBar value={summaryProgress} label={summaryStatus} /></Card>
-            </div>
-          )}
-          {summaryError && (
-            <div style={{
-              marginTop: 12, padding: '12px 14px', background: '#fef2f2',
-              border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 10, fontSize: 13.5,
-            }}>{summaryError}</div>
           )}
 
-          {/* Results */}
-          {summary && (
-            <div ref={resultsRef} style={{ marginTop: 24 }}>
+          {activeView === 'report' && hasSummary && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <SummaryView summary={summary} transcript={transcript} />
               <FollowUpEmails summary={summary} />
             </div>
           )}
-        </div>
-
-        {/* SIDEBAR */}
-        <Sidebar />
+        </main>
       </div>
     </div>
   );
 }
+
+// ── Page header — matches the active view ─────────────────
+const HEADERS = {
+  'audio':        ['Upload Audio',       'Upload a WAV, MP3, or M4A recording. Whisper will transcribe it and identify speakers.'],
+  'realtime':     ['Real-Time Audio',    'Record directly from your microphone.'],
+  'paste':        ['Paste Text',         'Paste an existing transcript to summarise.'],
+  'text':         ['Upload Text',        'Upload a .txt transcript to summarise.'],
+  'audio-player': ['Audio',              'The original recording — play, seek, and download.'],
+  'transcript':   ['Transcript & Playback', 'Review the transcript, then generate a summary when you\'re ready.'],
+  'confidence':   ['Confidence Scores',  'See where Whisper is confident and where the transcript may need review.'],
+  'report':       ['Final Report',       'Meeting summary, action items, speaker breakdown, and follow-up emails.'],
+};
+
+function ViewHeader({ activeView, hasResults, onReturnToResults }) {
+  const [title, subtitle] = HEADERS[activeView] || ['', ''];
+  const showReturn = hasResults && INPUT_VIEWS.has(activeView);
+  return (
+    <div style={{
+      marginBottom: 22, display: 'flex', alignItems: 'flex-start',
+      justifyContent: 'space-between', gap: 16, flexWrap: 'wrap',
+    }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <h1 style={{
+          fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 30,
+          letterSpacing: '-0.02em', margin: 0, color: '#0A0F1E',
+        }}>{title}</h1>
+        {subtitle && (
+          <p style={{ margin: '4px 0 0', color: '#66645c', fontSize: 14.5 }}>{subtitle}</p>
+        )}
+      </div>
+      {showReturn && (
+        <button
+          onClick={onReturnToResults}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 7,
+            background: 'rgba(0,197,176,0.10)', color: '#00706b',
+            border: '1px solid rgba(0,197,176,0.35)', borderRadius: 999,
+            padding: '7px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          You have results — view →
+        </button>
+      )}
+    </div>
+  );
+}
+
+const primaryBtn = {
+  background: '#00C5B0', color: '#0A0F1E', border: 'none', borderRadius: 11,
+  padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+};
+
+const errorBox = {
+  padding: '12px 14px', background: '#fef2f2',
+  border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 10, fontSize: 13.5,
+};

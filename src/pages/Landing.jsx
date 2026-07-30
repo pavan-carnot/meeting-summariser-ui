@@ -54,9 +54,9 @@ function HowItWorks({ steps, reveal, stagger }) {
           -webkit-text-stroke: 1.5px #00C5B0;
           transform: translateY(-4px);
         }
-        .how-arrow { color: #c9c5b5; }
+        .how-arrow { color: #0A0F1E; opacity: .55; transition: opacity .35s ease, color .35s ease, transform .35s ease; }
         .how-step:hover ~ .how-arrow,
-        .how-arrow.is-active { color: #00C5B0; }
+        .how-arrow.is-active { color: #00C5B0; opacity: 1; transform: translateX(4px); }
       `}</style>
 
       <div {...reveal('how-header', { textAlign: 'center', marginBottom: 72 })}>
@@ -67,22 +67,53 @@ function HowItWorks({ steps, reveal, stagger }) {
         <p style={{ fontSize: 15.5, color: '#66645c', marginTop: 14 }}>Four stages. All local.</p>
       </div>
 
-      {/* Row of steps + arrows */}
+      {/* Two-row grid: row 1 = numbers + arrows (arrows centered on the
+          number's mid-line), row 2 = title + description under each number. */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(0,1fr) 32px minmax(0,1fr) 32px minmax(0,1fr) 32px minmax(0,1fr)',
-        alignItems: 'flex-start',
-        gap: 0,
+        gridTemplateColumns: 'minmax(0,1fr) 64px minmax(0,1fr) 64px minmax(0,1fr) 64px minmax(0,1fr)',
+        gridTemplateRows: 'auto auto',
+        alignItems: 'start',
+        columnGap: 0,
+        rowGap: 4,
       }}>
         {steps.map((s, i) => (
           <React.Fragment key={i}>
-            <div {...stagger(`step-${i}`, i)} className="how-step" style={{ paddingRight: 8 }}>
-              {/* Huge outlined number */}
+            {/* Row 1: giant centered number */}
+            <div
+              {...stagger(`step-${i}`, i)}
+              className="how-step"
+              style={{
+                gridColumn: (i * 2) + 1,
+                gridRow: 1,
+                textAlign: 'center',
+                display: 'flex', justifyContent: 'center', alignItems: 'center',
+              }}
+            >
               <div className="how-num">{s.n}</div>
+            </div>
 
-              {/* Divider line */}
-              <div style={{ height: 1, background: '#e5e2d6', margin: '22px 0 20px' }} />
+            {/* Row 1: arrow between steps, vertically centered on the number */}
+            {i < steps.length - 1 && (
+              <div className="how-arrow" style={{
+                gridColumn: (i * 2) + 2,
+                gridRow: 1,
+                alignSelf: 'center',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'color .35s ease',
+              }}>
+                <FlowArrow />
+              </div>
+            )}
 
+            {/* Row 2: title + description centered under the number */}
+            <div style={{
+              gridColumn: (i * 2) + 1,
+              gridRow: 2,
+              textAlign: 'center',
+              padding: '0 10px',
+            }}>
+              <div style={{ height: 1, background: '#e5e2d6', margin: '22px auto 20px', maxWidth: 96 }} />
               <h3 style={{
                 fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 22,
                 margin: 0, color: '#0A0F1E', letterSpacing: '-0.01em', lineHeight: 1.15,
@@ -91,16 +122,6 @@ function HowItWorks({ steps, reveal, stagger }) {
                 margin: '10px 0 0', fontSize: 14.5, lineHeight: 1.6, color: '#66645c',
               }}>{s.desc}</p>
             </div>
-
-            {/* Arrow between steps (not after the last) */}
-            {i < steps.length - 1 && (
-              <div className="how-arrow" style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                paddingTop: 40, transition: 'color .35s ease',
-              }}>
-                <FlowArrow />
-              </div>
-            )}
           </React.Fragment>
         ))}
       </div>
@@ -109,12 +130,12 @@ function HowItWorks({ steps, reveal, stagger }) {
 }
 
 function FlowArrow() {
-  // Elegant thin arrow — dashed shaft with a solid head. Uses currentColor
-  // so parent hover states can tint it teal.
+  // Solid shaft + filled triangular head. Reads as clear directional flow
+  // from one step to the next. Uses currentColor so hover states can tint it.
   return (
-    <svg width="44" height="24" viewBox="0 0 44 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M2 12 H36" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="4 4" />
-      <path d="M32 6 L40 12 L32 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <svg width="56" height="18" viewBox="0 0 56 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M2 9 H44" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M42 2 L54 9 L42 16 Z" fill="currentColor" />
     </svg>
   );
 }
@@ -152,10 +173,11 @@ function FeaturesSection({ features }) {
     <section
       id="features"
       style={{
-        // Bottom margin gives space BEFORE the next section (How it works)
-        // without extending the sticky region — margin is outside the box,
-        // so the section's sticky descendants unpin cleanly at its bottom.
-        maxWidth: 1180, margin: '130px auto 130px', padding: '0 24px',
+        // The trailing spacer already provides the last card's sticky
+        // duration; a modest bottom margin then hands off cleanly to the
+        // next section. Margin is outside the sticky region, so the
+        // heading + last card unpin exactly at the section boundary.
+        maxWidth: 1180, margin: '130px auto 60px', padding: '0 24px',
         position: 'relative',
       }}
     >
@@ -178,8 +200,12 @@ function FeaturesSection({ features }) {
         </div>
       </div>
 
-      {/* STACKING CARDS — no bottom padding so the last card + heading
-          unpin the moment the section boundary passes them. */}
+      {/* STACKING CARDS.
+          A trailing spacer with height ≥ CARD_MIN_H gives the LAST card
+          the same sticky duration every other card has (each card pins
+          while the *next* card's flow position scrolls up under it — the
+          last card has no "next", so we simulate one with a spacer).
+          Without this, the last card would flash and immediately slide out. */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 34 }}>
         {features.map((f, i) => {
           const p = palettes[i % palettes.length];
@@ -236,6 +262,8 @@ function FeaturesSection({ features }) {
             </div>
           );
         })}
+        {/* Trailing spacer — gives the LAST card its full pinned reveal */}
+        <div aria-hidden="true" style={{ height: CARD_MIN_H }} />
       </div>
     </section>
   );

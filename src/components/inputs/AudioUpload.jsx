@@ -20,23 +20,59 @@ export default function AudioUpload({ languages, onComplete }) {
   };
 
   const process = async () => {
-    if (!file) return;
+    if (!file) {
+      console.warn('[AudioUpload] process() called with no file — aborting');
+      return;
+    }
+    console.group('[AudioUpload] Process Audio');
+    console.log('[AudioUpload] 1/4  file:', {
+      name: file.name, sizeKB: (file.size / 1024).toFixed(1),
+      type: file.type, language, isLongRecording: isLong,
+    });
+
     setBusy(true);
     setProgress(0);
     setStatusMsg('Uploading audio…');
     setError(null);
+
+    const t0 = performance.now();
     try {
-      const { job_id } = await uploadAudio(file, { language, isLongRecording: isLong });
+      console.log('[AudioUpload] 2/4  POST /api/upload-audio …');
+      const uploadRes = await uploadAudio(file, { language, isLongRecording: isLong });
+      const t1 = performance.now();
+      console.log(`[AudioUpload]        upload OK in ${(t1 - t0).toFixed(0)}ms →`, uploadRes);
+
+      const { job_id } = uploadRes || {};
+      if (!job_id) {
+        throw new Error(`Backend returned no job_id. Full response: ${JSON.stringify(uploadRes)}`);
+      }
+
+      console.log(`[AudioUpload] 3/4  polling job ${job_id} …`);
+      let lastStatus = '';
       const finalStatus = await pollJob(job_id, {
         onUpdate: (s) => {
           setProgress(s.progress || 0);
           setStatusMsg(s.status_message || s.status || 'Processing…');
+          const summary = `${s.status || '?'} · ${s.progress || 0}% · ${s.status_message || ''}`;
+          if (summary !== lastStatus) {
+            console.log('[AudioUpload]        job poll:', summary);
+            lastStatus = summary;
+          }
         },
       });
+      const t2 = performance.now();
+      console.log(`[AudioUpload]        job finished in ${((t2 - t1) / 1000).toFixed(1)}s`);
+
       const transcriptData = finalStatus.result || finalStatus;
-      // Build a flat transcript string like Streamlit does:
-      let transcriptText = '';
       const segs = transcriptData?.transcript;
+      console.log('[AudioUpload] 4/4  final transcriptData:', {
+        segments: Array.isArray(segs) ? segs.length : 'none',
+        language: transcriptData?.language,
+        hasRaw: !!transcriptData?.raw_transcription,
+        hasConfidenceMetrics: !!transcriptData?.confidence_metrics,
+      });
+
+      let transcriptText = '';
       if (Array.isArray(segs)) {
         transcriptText = segs
           .map((seg) => `[${seg.start_time_formatted || ''}] Speaker ${seg.speaker || '?'}: ${seg.text || ''}`)
@@ -48,10 +84,25 @@ export default function AudioUpload({ languages, onComplete }) {
         language: transcriptData?.language || (language !== 'auto' ? language : null),
         audioBlob: file,
       });
+      console.log('[AudioUpload] DONE  handed off to parent');
     } catch (e) {
-      console.error(e);
-      setError(e.message || 'Audio processing failed');
+      // Extract as much useful info as possible from Axios errors
+      const info = {
+        message: e?.message,
+        code: e?.code,
+        httpStatus: e?.response?.status,
+        httpData: e?.response?.data,
+        url: e?.config?.url,
+        method: e?.config?.method,
+      };
+      console.error('[AudioUpload] FAILED', info, e);
+      const readable = info.httpStatus
+        ? `${info.httpStatus} — ${JSON.stringify(info.httpData || info.message)}`
+        : (info.code === 'ECONNABORTED' ? 'Request timed out'
+          : info.message || 'Audio processing failed');
+      setError(readable);
     } finally {
+      console.groupEnd();
       setBusy(false);
     }
   };
