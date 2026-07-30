@@ -19,7 +19,7 @@ export default function AppNavbar() {
           />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
             <span style={{ fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 15.5 }}>Meeting Summariser</span>
-            <span style={{ fontSize: 11.5, color: '#9a978d' }}>Carnot Research</span>
+            <span style={{ fontSize: 11.5, color: '#9a978d' }}>by Carnot Research Pvt Ltd</span>
           </div>
         </Link>
         <Link to="/" style={{

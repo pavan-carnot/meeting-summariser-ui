@@ -422,7 +422,7 @@ export default function Landing() {
               />
               <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
                 <span style={{ fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 16.5 }}>Meeting Summariser</span>
-                <span style={{ fontSize: 12, color: '#9a978d' }}>Carnot Research</span>
+                <span style={{ fontSize: 12, color: '#9a978d' }}>by Carnot Research Pvt Ltd</span>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 34 }}>
