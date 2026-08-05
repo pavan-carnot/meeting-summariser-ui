@@ -52,8 +52,8 @@ export default function AudioUpload({ languages, onComplete }) {
       const finalStatus = await pollJob(job_id, {
         onUpdate: (s) => {
           setProgress(s.progress || 0);
-          setStatusMsg(s.status_message || s.status || 'Processing…');
-          const summary = `${s.status || '?'} · ${s.progress || 0}% · ${s.status_message || ''}`;
+          setStatusMsg(s.status_message || s.message || s.status || 'Processing…');
+          const summary = `${s.status || '?'} · ${s.progress || 0}% · ${s.status_message || s.message || ''}`;
           if (summary !== lastStatus) {
             console.log('[AudioUpload]        job poll:', summary);
             lastStatus = summary;

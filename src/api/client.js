@@ -103,27 +103,27 @@ export async function summarize({ transcript, participants, language, isLongReco
 }
 
 export async function getJob(jobId) {
-  const { data } = await api.get(`/api/job/${jobId}`);
+  const { data } = await api.get(`/api/job/${jobId}`, { timeout: 10000 });
   return data;
 }
 
 // Poll a job until it completes/fails. Calls onUpdate on each poll.
-export async function pollJob(jobId, { intervalMs = 1500, onUpdate } = {}) {
+export async function pollJob(jobId, { intervalMs = 2000, maxRetries = 60, onUpdate } = {}) {
   return new Promise((resolve, reject) => {
-    let attempt = 0;
+    let consecutiveErrors = 0;
     const tick = async () => {
-      attempt += 1;
       try {
         const status = await getJob(jobId);
+        consecutiveErrors = 0; // Reset error counter on successful response
         if (onUpdate) onUpdate(status);
         const s = String(status.status || '').toLowerCase();
         if (s === 'completed') return resolve(status);
         if (s === 'failed') return reject(new Error(status.error || status.status_message || `Job ${jobId} failed`));
         setTimeout(tick, intervalMs);
       } catch (err) {
-        // Give the server a few chances before giving up on transient errors
-        if (attempt < 3) {
-          console.warn(`[pollJob] transient error on attempt ${attempt}, retrying …`, err.message);
+        consecutiveErrors += 1;
+        if (consecutiveErrors < maxRetries) {
+          console.warn(`[pollJob] transient network error (${consecutiveErrors}/${maxRetries}), retrying...`, err.message);
           setTimeout(tick, intervalMs);
         } else {
           reject(new Error(`Job poll failed for ${jobId}: ${err.message}`));
