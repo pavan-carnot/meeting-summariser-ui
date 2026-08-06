@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, FileJson, FileText, ChevronDown, ChevronRight } from 'lucide-react';
+import { Download, FileJson, FileText, ChevronDown, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { Card, Button, Badge } from './Card.jsx';
 
 const priorityColor = (p) => {
@@ -88,7 +88,7 @@ export default function SummaryView({ summary, transcript }) {
       </div>
 
       {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: 6, background: '#f4f3ee', padding: 5, borderRadius: 12, marginBottom: 20, width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: 6, background: '#f1f5f9', padding: 5, borderRadius: 12, marginBottom: 20, width: 'fit-content' }}>
         {[
           { id: 'summary', label: 'Meeting Summary' },
           { id: 'speakers', label: 'Speaker Summaries' },
@@ -100,7 +100,7 @@ export default function SummaryView({ summary, transcript }) {
               padding: '8px 18px', borderRadius: 8, border: 'none', cursor: 'pointer',
               fontSize: 14, fontWeight: 600,
               background: tab === t.id ? '#fff' : 'transparent',
-              color: tab === t.id ? '#111' : '#66645c',
+              color: tab === t.id ? '#111' : '#64748b',
               boxShadow: tab === t.id ? '0 1px 4px rgba(17,17,17,0.08)' : 'none',
             }}
           >{t.label}</button>
@@ -112,25 +112,29 @@ export default function SummaryView({ summary, transcript }) {
           <div>
             <h4 style={sectionHeadStyle}>Summary</h4>
             <p style={{ margin: 0, color: '#333', lineHeight: 1.6, fontSize: 14.5 }}>
-              {meetingSummary.summary || <em style={{ color: '#9a978d' }}>No summary available.</em>}
+              {meetingSummary.summary || <em style={{ color: '#94a3b8' }}>No summary available.</em>}
             </p>
 
-            <h4 style={sectionHeadStyle}>Key Points</h4>
-            <ul style={ulStyle}>
-              {(meetingSummary.key_points || []).map((k, i) => <li key={i}>{k}</li>)}
-              {!meetingSummary.key_points?.length && <li style={emptyStyle}>None</li>}
-            </ul>
+            <SectionList
+              title="Key Points"
+              accent="#0d9488"
+              items={meetingSummary.key_points || []}
+              marker="dot"
+              emptyLabel="No key points captured."
+            />
 
-            <h4 style={sectionHeadStyle}>Decisions</h4>
-            <ul style={ulStyle}>
-              {(meetingSummary.decisions || []).map((d, i) => <li key={i}>{d}</li>)}
-              {!meetingSummary.decisions?.length && <li style={emptyStyle}>None</li>}
-            </ul>
+            <SectionList
+              title="Decisions"
+              accent="#0d9488"
+              items={meetingSummary.decisions || []}
+              marker="check"
+              emptyLabel="No decisions were recorded."
+            />
 
             {metadata && Object.keys(metadata).length > 0 && (
               <div style={{
-                marginTop: 24, padding: 14, borderRadius: 10, background: '#faf9f4',
-                border: '1px solid #e5e2d6', fontSize: 13, color: '#66645c',
+                marginTop: 24, padding: 14, borderRadius: 10, background: '#f8fafc',
+                border: '1px solid #e2e8f0', fontSize: 13, color: '#64748b',
               }}>
                 <div><strong>Language:</strong> {metadata.language_name || metadata.language || 'Unknown'}</div>
                 <div><strong>Participants:</strong> {metadata.participant_count ?? '—'}</div>
@@ -148,7 +152,7 @@ export default function SummaryView({ summary, transcript }) {
               const open = expandedAction === i;
               return (
                 <div key={i} style={{
-                  border: '1px solid #e5e2d6', borderRadius: 12, marginBottom: 10, background: '#fff',
+                  border: '1px solid #e2e8f0', borderRadius: 12, marginBottom: 10, background: '#fff',
                 }}>
                   <button
                     onClick={() => setExpandedAction(open ? null : i)}
@@ -187,7 +191,7 @@ export default function SummaryView({ summary, transcript }) {
             const open = expandedSpeaker === i;
             return (
               <div key={speaker} style={{
-                border: '1px solid #e5e2d6', borderRadius: 12, marginBottom: 10, background: '#fff',
+                border: '1px solid #e2e8f0', borderRadius: 12, marginBottom: 10, background: '#fff',
               }}>
                 <button
                   onClick={() => setExpandedSpeaker(open ? null : i)}
@@ -232,11 +236,52 @@ export default function SummaryView({ summary, transcript }) {
   );
 }
 
+// Minimal list section — clean typography, subtle marker per item.
+// The marker shape (dot vs check) is the only differentiator between
+// "Key Points" (topics discussed) and "Decisions" (things resolved).
+function SectionList({ title, accent, items, marker, emptyLabel }) {
+  return (
+    <div style={{ marginTop: 24 }}>
+      <div style={{
+        fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 12,
+        letterSpacing: '.1em', textTransform: 'uppercase',
+        color: '#94a3b8', marginBottom: 12,
+      }}>{title}</div>
+
+      {items.length === 0 && <div style={emptyStyle}>{emptyLabel}</div>}
+
+      <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+        {items.map((item, i) => (
+          <li key={i} style={{
+            display: 'flex', gap: 12, alignItems: 'flex-start',
+            padding: '6px 0', fontSize: 14, lineHeight: 1.6, color: '#0f172a',
+          }}>
+            {marker === 'check' ? (
+              <CheckCircle2
+                size={15}
+                color={accent}
+                strokeWidth={2.25}
+                style={{ flexShrink: 0, marginTop: 3 }}
+              />
+            ) : (
+              <span style={{
+                flexShrink: 0, marginTop: 9, width: 5, height: 5,
+                borderRadius: '50%', background: accent,
+              }} />
+            )}
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 const sectionHeadStyle = {
   fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 15,
-  color: '#0A0F1E', margin: '20px 0 8px', textTransform: 'uppercase',
+  color: '#0f172a', margin: '20px 0 8px', textTransform: 'uppercase',
   letterSpacing: '.05em',
 };
-const subheadStyle = { ...sectionHeadStyle, fontSize: 12.5, margin: '12px 0 4px', color: '#66645c' };
+const subheadStyle = { ...sectionHeadStyle, fontSize: 12.5, margin: '12px 0 4px', color: '#64748b' };
 const ulStyle = { margin: '4px 0 0 20px', padding: 0, color: '#333', lineHeight: 1.65, fontSize: 14 };
-const emptyStyle = { color: '#9a978d', fontStyle: 'italic', fontSize: 13.5 };
+const emptyStyle = { color: '#94a3b8', fontStyle: 'italic', fontSize: 13.5 };

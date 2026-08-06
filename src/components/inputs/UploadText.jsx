@@ -37,19 +37,19 @@ export default function UploadText({ onLoaded }) {
         onDrop={(e) => { e.preventDefault(); pick(e.dataTransfer.files?.[0]); }}
         onClick={() => inputRef.current?.click()}
         style={{
-          border: '2px dashed #d9d5c5', background: '#faf9f4', borderRadius: 14,
+          border: '2px dashed #cbd5e1', background: '#f8fafc', borderRadius: 14,
           padding: '30px 20px', textAlign: 'center', cursor: 'pointer',
         }}
       >
         <input ref={inputRef} type="file" accept=".txt" hidden onChange={(e) => pick(e.target.files?.[0])} />
-        <FileUp size={26} color="#66645c" style={{ margin: '0 auto 10px' }} />
+        <FileUp size={26} color="#64748b" style={{ margin: '0 auto 10px' }} />
         <div style={{ fontWeight: 600, color: '#111' }}>
           {file ? file.name : 'Drop a .txt file, or click to browse'}
         </div>
         {file && (
           <button
             onClick={(e) => { e.stopPropagation(); pick(null); setParticipants([]); }}
-            style={{ marginTop: 10, background: 'transparent', border: 'none', color: '#66645c', fontSize: 13, cursor: 'pointer' }}
+            style={{ marginTop: 10, background: 'transparent', border: 'none', color: '#64748b', fontSize: 13, cursor: 'pointer' }}
           ><X size={12} /> Remove</button>
         )}
       </div>

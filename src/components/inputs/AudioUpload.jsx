@@ -51,6 +51,8 @@ export default function AudioUpload({ languages, onComplete }) {
       let lastStatus = '';
       const finalStatus = await pollJob(job_id, {
         onUpdate: (s) => {
+          // pollJob already applies monotonic progress + forward-only phase
+          // smoothing, so we can trust s.progress and s.status_message here.
           setProgress(s.progress || 0);
           setStatusMsg(s.status_message || s.message || s.status || 'Processing…');
           const summary = `${s.status || '?'} · ${s.progress || 0}% · ${s.status_message || s.message || ''}`;
@@ -130,7 +132,7 @@ export default function AudioUpload({ languages, onComplete }) {
           </select>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#3a3833' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#334155' }}>
             <input type="checkbox" checked={isLong} onChange={(e) => setIsLong(e.target.checked)} />
             This is a long recording (&gt;15 min)
           </label>
@@ -143,8 +145,8 @@ export default function AudioUpload({ languages, onComplete }) {
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
         style={{
-          border: `2px dashed ${dragOver ? '#00C5B0' : '#d9d5c5'}`,
-          background: dragOver ? 'rgba(0,197,176,0.05)' : '#faf9f4',
+          border: `2px dashed ${dragOver ? '#0d9488' : '#cbd5e1'}`,
+          background: dragOver ? 'rgba(13,148,136,0.05)' : '#f8fafc',
           borderRadius: 14, padding: '30px 20px', textAlign: 'center', cursor: 'pointer',
           transition: 'border-color .15s ease, background .15s ease',
         }}
@@ -156,11 +158,11 @@ export default function AudioUpload({ languages, onComplete }) {
           hidden
           onChange={(e) => pickFile(e.target.files?.[0])}
         />
-        <Upload size={26} color="#66645c" style={{ margin: '0 auto 10px' }} />
+        <Upload size={26} color="#64748b" style={{ margin: '0 auto 10px' }} />
         <div style={{ fontWeight: 600, color: '#111' }}>
           {file ? file.name : 'Drop audio here, or click to browse'}
         </div>
-        <div style={{ fontSize: 12.5, color: '#9a978d', marginTop: 4 }}>
+        <div style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 4 }}>
           WAV · MP3 · M4A · up to a few hundred MB
         </div>
         {file && (
@@ -168,7 +170,7 @@ export default function AudioUpload({ languages, onComplete }) {
             onClick={(e) => { e.stopPropagation(); pickFile(null); }}
             style={{
               marginTop: 12, background: 'transparent', border: 'none', cursor: 'pointer',
-              color: '#66645c', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 4,
+              color: '#64748b', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 4,
             }}
           ><X size={12} /> Remove file</button>
         )}
@@ -198,6 +200,6 @@ export default function AudioUpload({ languages, onComplete }) {
 
 const selectStyle = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
-  border: '1px solid #d9d5c5', background: '#fff', fontSize: 14.5, color: '#111',
+  border: '1px solid #cbd5e1', background: '#fff', fontSize: 14.5, color: '#111',
   outline: 'none',
 };

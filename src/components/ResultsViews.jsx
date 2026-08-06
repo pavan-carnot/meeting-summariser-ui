@@ -10,7 +10,7 @@ function fmtTime(secs) {
 }
 
 function confColor(c) {
-  if (c == null) return { fg: '#9a978d', bg: 'transparent' };
+  if (c == null) return { fg: '#94a3b8', bg: 'transparent' };
   if (c >= 90) return { fg: '#166534', bg: 'rgba(76,175,80,0.14)' };
   if (c >= 70) return { fg: '#9a5b00', bg: 'rgba(255,152,0,0.16)' };
   return { fg: '#b91c1c', bg: 'rgba(244,67,54,0.16)' };
@@ -79,7 +79,7 @@ export function AudioPlayerView({ audioBlob, audioUrl }) {
       )}
 
       <div style={{
-        background: 'linear-gradient(150deg,#0A0F1E 0%,#1a2136 100%)',
+        background: 'linear-gradient(150deg,#0f172a 0%,#1a2136 100%)',
         borderRadius: 18, padding: '28px 26px', color: '#fff',
         display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap',
       }}>
@@ -87,9 +87,9 @@ export function AudioPlayerView({ audioBlob, audioUrl }) {
           onClick={toggle}
           style={{
             width: 64, height: 64, borderRadius: '50%', border: 'none', cursor: 'pointer',
-            background: '#00C5B0', color: '#0A0F1E',
+            background: '#0d9488', color: '#0f172a',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 10px 26px rgba(0,197,176,0.35)',
+            boxShadow: '0 10px 26px rgba(13,148,136,0.35)',
           }}
         >{playing ? <Pause size={22} /> : <Play size={22} />}</button>
 
@@ -103,7 +103,7 @@ export function AudioPlayerView({ audioBlob, audioUrl }) {
           <input
             type="range" min="0" max={duration || 0} step="0.1" value={time}
             onChange={(e) => { const el = audioRef.current; if (el) el.currentTime = parseFloat(e.target.value); }}
-            style={{ width: '100%', accentColor: '#00C5B0' }}
+            style={{ width: '100%', accentColor: '#0d9488' }}
           />
         </div>
       </div>
@@ -111,7 +111,7 @@ export function AudioPlayerView({ audioBlob, audioUrl }) {
       {audioBlob && (
         <div style={{
           marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))',
-          gap: 10, fontSize: 13, color: '#3a3833',
+          gap: 10, fontSize: 13, color: '#334155',
         }}>
           <Meta label="File" value={audioBlob.name || '—'} />
           <Meta label="Size" value={`${(audioBlob.size / (1024 * 1024)).toFixed(2)} MB`} />
@@ -128,10 +128,10 @@ export function AudioPlayerView({ audioBlob, audioUrl }) {
 function Meta({ label, value }) {
   return (
     <div style={{
-      background: '#faf9f4', border: '1px solid #e5e2d6', borderRadius: 10,
+      background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10,
       padding: '10px 12px',
     }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#9a978d', letterSpacing: '.08em', textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '.08em', textTransform: 'uppercase' }}>{label}</div>
       <div style={{ marginTop: 3, fontSize: 13.5, color: '#111', wordBreak: 'break-word' }}>{value}</div>
     </div>
   );
@@ -200,7 +200,7 @@ export function ConfidenceView({ transcriptData, onOpenTranscript }) {
       {total > 0 && (
         <div style={{ marginBottom: 20 }}>
           <div style={{
-            fontSize: 12, color: '#66645c', marginBottom: 6,
+            fontSize: 12, color: '#64748b', marginBottom: 6,
             display: 'flex', justifyContent: 'space-between',
           }}>
             <span>Segment distribution ({total} segments)</span>
@@ -208,7 +208,7 @@ export function ConfidenceView({ transcriptData, onOpenTranscript }) {
           </div>
           <div style={{
             display: 'flex', height: 12, borderRadius: 999, overflow: 'hidden',
-            border: '1px solid #e5e2d6',
+            border: '1px solid #e2e8f0',
           }}>
             <div style={{ width: `${pct(high)}%`, background: '#4ade80' }} title={`High: ${high}`} />
             <div style={{ width: `${pct(med)}%`, background: '#fbbf24' }} title={`Medium: ${med}`} />
@@ -220,7 +220,7 @@ export function ConfidenceView({ transcriptData, onOpenTranscript }) {
       {/* Needs-review list */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
-        fontSize: 13, fontWeight: 700, color: '#0A0F1E',
+        fontSize: 13, fontWeight: 700, color: '#0f172a',
       }}>
         {lowSegs.length ? <AlertTriangle size={15} color="#b91c1c" /> : <CheckCircle2 size={15} color="#166534" />}
         {lowSegs.length ? `${lowSegs.length} segments below 70% — worth reviewing` : 'No low-confidence segments — you\'re clean.'}
@@ -229,7 +229,7 @@ export function ConfidenceView({ transcriptData, onOpenTranscript }) {
       {lowSegs.length > 0 && (
         <div style={{
           maxHeight: 380, overflowY: 'auto',
-          background: '#faf9f4', border: '1px solid #e5e2d6',
+          background: '#f8fafc', border: '1px solid #e2e8f0',
           borderRadius: 12, padding: 8,
         }}>
           {lowSegs.map((s) => {
@@ -242,7 +242,7 @@ export function ConfidenceView({ transcriptData, onOpenTranscript }) {
                   background: bg, cursor: 'pointer',
                 }}
               >
-                <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 12.5, color: '#66645c', marginBottom: 3 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 12.5, color: '#64748b', marginBottom: 3 }}>
                   <span style={{ fontFamily: 'ui-monospace, monospace' }}>
                     [{s.start_time_formatted || fmtTime(s.start_time)}]
                   </span>
@@ -265,17 +265,17 @@ function BigStat({ label, value, tone }) {
   const bg = tone === 'good' ? 'rgba(76,175,80,0.10)'
     : tone === 'warn' ? 'rgba(255,152,0,0.10)'
     : tone === 'bad' ? 'rgba(244,67,54,0.10)'
-    : '#faf9f4';
+    : '#f8fafc';
   const fg = tone === 'good' ? '#166534'
     : tone === 'warn' ? '#9a5b00'
     : tone === 'bad' ? '#b91c1c'
-    : '#0A0F1E';
+    : '#0f172a';
   return (
     <div style={{
-      background: bg, border: '1px solid #e5e2d6', borderRadius: 12,
+      background: bg, border: '1px solid #e2e8f0', borderRadius: 12,
       padding: '14px 16px',
     }}>
-      <div style={{ fontSize: 11, fontWeight: 800, color: '#9a978d', letterSpacing: '.1em', textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', letterSpacing: '.1em', textTransform: 'uppercase' }}>{label}</div>
       <div style={{
         marginTop: 4, fontFamily: "'Manrope',sans-serif", fontWeight: 800,
         fontSize: 26, color: fg, letterSpacing: '-0.02em',
@@ -286,7 +286,7 @@ function BigStat({ label, value, tone }) {
 
 const ghostBtn = {
   display: 'inline-flex', alignItems: 'center', background: 'transparent',
-  border: '1px solid #e5e2d6', color: '#111', padding: '7px 13px', borderRadius: 9,
+  border: '1px solid #e2e8f0', color: '#111', padding: '7px 13px', borderRadius: 9,
   fontSize: 13, fontWeight: 600, cursor: 'pointer',
 };
-const emptyStyle = { color: '#9a978d', fontStyle: 'italic', fontSize: 14, padding: '10px 0' };
+const emptyStyle = { color: '#94a3b8', fontStyle: 'italic', fontSize: 14, padding: '10px 0' };

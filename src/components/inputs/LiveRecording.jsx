@@ -134,7 +134,7 @@ export default function LiveRecording({ languages, onComplete }) {
           </select>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#3a3833' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#334155' }}>
             <input type="checkbox" checked={isLong} onChange={(e) => setIsLong(e.target.checked)} />
             This will be a long recording (&gt;15 min)
           </label>
@@ -142,15 +142,15 @@ export default function LiveRecording({ languages, onComplete }) {
       </div>
 
       <div style={{
-        background: '#faf9f4', border: '1px solid #e5e2d6', borderRadius: 14, padding: 24,
+        background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: 24,
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
       }}>
         <div style={{
           width: 72, height: 72, borderRadius: '50%',
-          background: recording ? '#00C5B0' : '#111',
+          background: recording ? '#0d9488' : '#111',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           transform: `scale(${1 + level * 0.25})`, transition: 'transform .12s ease-out, background .2s ease',
-          boxShadow: recording ? '0 0 0 8px rgba(0,197,176,0.15)' : '0 6px 16px rgba(17,17,17,0.2)',
+          boxShadow: recording ? '0 0 0 8px rgba(13,148,136,0.15)' : '0 6px 16px rgba(17,17,17,0.2)',
         }}>
           <Mic size={30} color="#fff" />
         </div>
@@ -202,5 +202,5 @@ export default function LiveRecording({ languages, onComplete }) {
 
 const selectStyle = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
-  border: '1px solid #d9d5c5', background: '#fff', fontSize: 14.5, color: '#111', outline: 'none',
+  border: '1px solid #cbd5e1', background: '#fff', fontSize: 14.5, color: '#111', outline: 'none',
 };

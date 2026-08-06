@@ -4,7 +4,7 @@ import { Card } from './Card.jsx';
 
 // ── Confidence → colour helpers (mirrors backend/app.py) ────────────────
 function confColor(c) {
-  if (c == null) return { fg: '#9a978d', bg: 'transparent' };
+  if (c == null) return { fg: '#94a3b8', bg: 'transparent' };
   if (c >= 90) return { fg: '#166534', bg: 'rgba(76,175,80,0.14)' };
   if (c >= 70) return { fg: '#9a5b00', bg: 'rgba(255,152,0,0.16)' };
   return { fg: '#b91c1c', bg: 'rgba(244,67,54,0.16)' };
@@ -98,7 +98,20 @@ export default function TranscriptPreview({
     return [...s];
   }, [segments]);
 
-  const displaySpeaker = (raw) => speakerNames[String(raw)] || `Speaker ${raw}`;
+  // Format a raw diarization key like "SPEAKER_00" as "Speaker 00" so the
+  // rendered label doesn't double up ("Speaker SPEAKER_00"). If the user has
+  // typed a friendly name for this speaker, prefer that verbatim.
+  const displaySpeaker = (raw) => {
+    if (speakerNames[String(raw)]) return speakerNames[String(raw)];
+    const s = String(raw ?? '?');
+    const m = s.match(/^speaker[_\s-]*(.+)$/i);
+    return m ? `Speaker ${m[1]}` : `Speaker ${s}`;
+  };
+  const speakerShortLabel = (raw) => {
+    const s = String(raw ?? '?');
+    const m = s.match(/^speaker[_\s-]*(.+)$/i);
+    return m ? `Speaker ${m[1]}` : `Speaker ${s}`;
+  };
 
   // ── Audio playback ─────────────────────────────────────────
   useEffect(() => {
@@ -152,32 +165,30 @@ export default function TranscriptPreview({
   }, [activeIdx, editing]);
 
   // ── Editing handlers ───────────────────────────────────────
-  const applyEdits = (nextSegs, nextNames = speakerNames) => {
-    const withNames = nextSegs.map((s) => ({
-      ...s,
-      // apply displayed speaker rename by baking it into "speaker" key so
-      // the flat text uses the friendly name
-      speaker: nextNames[String(s.speaker ?? '?')]
-        ? nextNames[String(s.speaker ?? '?')].replace(/^Speaker\s*/i, '')
-        : s.speaker,
-    }));
-    setSegments(withNames);
-    onTranscriptChange?.(rebuildFlatTranscript(withNames), {
-      ...transcriptData,
-      transcript: withNames,
-    });
-  };
-
   const editSegText = (idx, text) => {
     const next = segments.map((s, i) => (i === idx ? { ...s, text } : s));
     setSegments(next);
   };
 
   const commitEdits = () => {
-    onTranscriptChange?.(rebuildFlatTranscript(segments), {
-      ...transcriptData,
-      transcript: segments,
+    // Bake speaker renames into each segment's `speaker` field so downstream
+    // consumers (summary, follow-up emails, flat transcript) see the friendly
+    // name instead of the raw diarization key. Strip a leading "Speaker "
+    // prefix if the user typed one so we don't produce "Speaker Speaker Alice".
+    const named = segments.map((s) => {
+      const rename = speakerNames[String(s.speaker ?? '?')];
+      if (!rename) return s;
+      const cleaned = rename.replace(/^Speaker\s*/i, '').trim();
+      return cleaned ? { ...s, speaker: cleaned } : s;
     });
+    setSegments(named);
+    onTranscriptChange?.(rebuildFlatTranscript(named), {
+      ...transcriptData,
+      transcript: named,
+    });
+    // Clear the local rename map — the names are now part of the segments,
+    // so the "Rename speakers" inputs should start fresh on next edit.
+    setSpeakerNames({});
     setEditing(false);
   };
 
@@ -192,7 +203,7 @@ export default function TranscriptPreview({
   return (
     <Card>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ fontSize: 13, color: '#66645c' }}>
+        <div style={{ fontSize: 13, color: '#64748b' }}>
           Colours show Whisper confidence — hover any word for its exact score.
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -214,16 +225,16 @@ export default function TranscriptPreview({
       </div>
 
       {/* Legend + metrics */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 12.5, color: '#66645c', marginBottom: 10 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 12.5, color: '#64748b', marginBottom: 10 }}>
         <span>🟢 High (≥90%)</span>
         <span>🟡 Medium (70–89%)</span>
         <span>🔴 Low (&lt;70%)</span>
-        <span style={{ color: '#9a978d', fontStyle: 'italic', marginLeft: 'auto' }}>💡 Hover a word to see its confidence</span>
+        <span style={{ color: '#94a3b8', fontStyle: 'italic', marginLeft: 'auto' }}>💡 Hover a word to see its confidence</span>
       </div>
       {metrics && metrics.average != null && (
         <div style={{
-          display: 'flex', gap: 20, background: '#faf9f4', border: '1px solid #e5e2d6',
-          borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#3a3833', marginBottom: 12,
+          display: 'flex', gap: 20, background: '#f8fafc', border: '1px solid #e2e8f0',
+          borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#334155', marginBottom: 12,
         }}>
           <span>Avg: <strong style={{ color: confColor(metrics.average).fg }}>{metrics.average}%</strong></span>
           <span>Min: <strong>{metrics.min}%</strong></span>
@@ -238,15 +249,15 @@ export default function TranscriptPreview({
       {audioSrc && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 12,
-          background: '#faf9f4', border: '1px solid #e5e2d6',
+          background: '#f8fafc', border: '1px solid #e2e8f0',
           color: '#111', padding: '10px 14px', borderRadius: 12, marginBottom: 12,
         }}>
           <button onClick={togglePlay} style={{
             width: 38, height: 38, borderRadius: '50%', border: 'none', cursor: 'pointer',
-            background: '#00C5B0', color: '#0A0F1E', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(0,197,176,0.28)',
+            background: '#0d9488', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(13,148,136,0.28)',
           }}>{playing ? <Pause size={16} /> : <Play size={16} />}</button>
-          <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: '#3a3833' }}>
+          <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: '#334155' }}>
             {fmtTime(audioTime)} / {fmtTime(duration)}
           </div>
           <input
@@ -256,7 +267,7 @@ export default function TranscriptPreview({
             step="0.1"
             value={audioTime}
             onChange={(e) => { const el = audioRef.current; if (el) el.currentTime = parseFloat(e.target.value); }}
-            style={{ flex: 1, accentColor: '#00C5B0' }}
+            style={{ flex: 1, accentColor: '#0d9488' }}
           />
           <audio ref={audioRef} src={audioSrc} preload="metadata" style={{ display: 'none' }} />
         </div>
@@ -265,24 +276,39 @@ export default function TranscriptPreview({
       {/* Speaker rename bar (only visible in edit mode) */}
       {editing && distinctSpeakers.length > 0 && (
         <div style={{
-          background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 10,
-          padding: '10px 12px', marginBottom: 10, fontSize: 13,
+          background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10,
+          padding: '12px 14px', marginBottom: 10, fontSize: 13,
         }}>
-          <div style={{ fontWeight: 700, marginBottom: 6, color: '#9a3412' }}>Rename speakers</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px,1fr))', gap: 8 }}>
+          <div style={{
+            fontWeight: 700, marginBottom: 10, color: '#0f172a',
+            fontSize: 12.5, letterSpacing: '.06em', textTransform: 'uppercase',
+          }}>Rename speakers</div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: 10,
+          }}>
             {distinctSpeakers.map((sp) => (
-              <div key={sp} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span style={{ fontSize: 12.5, color: '#66645c', whiteSpace: 'nowrap' }}>Speaker {sp}:</span>
+              <label key={sp} style={{
+                display: 'grid', gridTemplateColumns: 'max-content 1fr',
+                alignItems: 'center', gap: 10,
+              }}>
+                <span style={{
+                  fontSize: 12.5, color: '#64748b', whiteSpace: 'nowrap',
+                  fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+                }}>{speakerShortLabel(sp)}</span>
                 <input
                   value={speakerNames[sp] || ''}
-                  placeholder={`e.g., Alice`}
+                  placeholder="e.g., Alice"
                   onChange={(e) => setSpeakerNames((s) => ({ ...s, [sp]: e.target.value }))}
                   style={{
-                    flex: 1, padding: '5px 8px', border: '1px solid #d9d5c5', borderRadius: 6,
-                    fontSize: 13, outline: 'none',
+                    minWidth: 0, width: '100%',
+                    padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6,
+                    fontSize: 13, outline: 'none', background: '#ffffff',
+                    boxSizing: 'border-box',
                   }}
                 />
-              </div>
+              </label>
             ))}
           </div>
         </div>
@@ -290,7 +316,7 @@ export default function TranscriptPreview({
 
       {/* View toggle: diarized ↔ raw (only if raw exists) */}
       {rawSegments.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, background: '#f4f3ee', padding: 5, borderRadius: 10, marginBottom: 10, width: 'fit-content' }}>
+        <div style={{ display: 'flex', gap: 6, background: '#f1f5f9', padding: 5, borderRadius: 10, marginBottom: 10, width: 'fit-content' }}>
           {[
             { id: 'diarized', label: '🔊 Speaker-diarized' },
             { id: 'raw', label: '📝 Raw Whisper' },
@@ -302,7 +328,7 @@ export default function TranscriptPreview({
                 padding: '6px 14px', borderRadius: 7, border: 'none', cursor: 'pointer',
                 fontSize: 13, fontWeight: 600,
                 background: view === t.id ? '#fff' : 'transparent',
-                color: view === t.id ? '#111' : '#66645c',
+                color: view === t.id ? '#111' : '#64748b',
                 boxShadow: view === t.id ? '0 1px 3px rgba(17,17,17,0.06)' : 'none',
               }}
             >{t.label}</button>
@@ -315,13 +341,13 @@ export default function TranscriptPreview({
         ref={listRef}
         style={{
           maxHeight: 460, overflowY: 'auto',
-          background: '#faf9f4', border: '1px solid #e5e2d6',
+          background: '#f8fafc', border: '1px solid #e2e8f0',
           borderRadius: 12, padding: 12,
           fontSize: 13.5, lineHeight: 1.7, color: '#2a2823',
         }}
       >
         {currentList.length === 0 && (
-          <div style={{ color: '#9a978d', textAlign: 'center', padding: 20 }}>No segments to display.</div>
+          <div style={{ color: '#94a3b8', textAlign: 'center', padding: 20 }}>No segments to display.</div>
         )}
         {currentList.map((seg, idx) => {
           const isRaw = view === 'raw';
@@ -341,16 +367,16 @@ export default function TranscriptPreview({
               style={{
                 padding: '8px 10px', borderRadius: 8, marginBottom: 4,
                 cursor: start != null ? 'pointer' : 'default',
-                background: isActive ? 'rgba(0,197,176,0.14)' : 'transparent',
-                borderLeft: isActive ? '3px solid #00C5B0' : '3px solid transparent',
+                background: isActive ? 'rgba(13,148,136,0.14)' : 'transparent',
+                borderLeft: isActive ? '3px solid #0d9488' : '3px solid transparent',
                 transition: 'background .15s ease',
               }}
             >
               <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
                 <span>{dot}</span>
-                <span style={{ color: '#8c8a80', fontSize: 12, fontFamily: 'ui-monospace, monospace' }}>[{ts}]</span>
+                <span style={{ color: '#94a3b8', fontSize: 12, fontFamily: 'ui-monospace, monospace' }}>[{ts}]</span>
                 {!isRaw && (
-                  <strong style={{ color: '#00706b', fontSize: 13, marginRight: 4 }}>
+                  <strong style={{ color: '#0f766e', fontSize: 13, marginRight: 4 }}>
                     {speakerDisplay}:
                   </strong>
                 )}
@@ -362,7 +388,7 @@ export default function TranscriptPreview({
                     onClick={(e) => e.stopPropagation()}
                     style={{
                       flex: 1, minWidth: 240, minHeight: 46, padding: 8, borderRadius: 6,
-                      border: '1px solid #d9d5c5', background: '#ffffff', color: '#111',
+                      border: '1px solid #cbd5e1', background: '#ffffff', color: '#111',
                       fontFamily: "'Inter', sans-serif", fontSize: 13.5, lineHeight: 1.5,
                       resize: 'vertical', outline: 'none',
                     }}
@@ -389,7 +415,7 @@ export default function TranscriptPreview({
                 )}
 
                 {seg_conf != null && (
-                  <span style={{ color: '#9a978d', fontSize: 11 }}>({Math.round(seg_conf)}%)</span>
+                  <span style={{ color: '#94a3b8', fontSize: 11 }}>({Math.round(seg_conf)}%)</span>
                 )}
               </div>
             </div>
@@ -411,11 +437,11 @@ export default function TranscriptPreview({
 
 const btnGhost = {
   display: 'inline-flex', alignItems: 'center', background: 'transparent',
-  border: '1px solid #e5e2d6', color: '#111', padding: '7px 13px', borderRadius: 9,
+  border: '1px solid #e2e8f0', color: '#111', padding: '7px 13px', borderRadius: 9,
   fontSize: 13, fontWeight: 600, cursor: 'pointer',
 };
 const btnTeal = {
-  display: 'inline-flex', alignItems: 'center', background: '#00C5B0',
+  display: 'inline-flex', alignItems: 'center', background: '#0d9488',
   border: 'none', color: '#111', padding: '7px 13px', borderRadius: 9,
   fontSize: 13, fontWeight: 700, cursor: 'pointer',
 };

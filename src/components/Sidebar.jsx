@@ -29,7 +29,7 @@ export default function Sidebar({
       position: 'sticky', top: 0, alignSelf: 'flex-start',
       height: '100vh',
       width: 260, flexShrink: 0,
-      background: '#faf9f4', borderRight: '1px solid #e5e2d6',
+      background: '#f8fafc', borderRight: '1px solid #e2e8f0',
       display: 'flex', flexDirection: 'column',
       padding: '22px 18px 18px',
       boxSizing: 'border-box',
@@ -40,7 +40,7 @@ export default function Sidebar({
           to="/"
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            color: '#66645c', fontSize: 12.5, fontWeight: 500,
+            color: '#64748b', fontSize: 12.5, fontWeight: 500,
             textDecoration: 'none', padding: '4px 8px 4px 4px',
             borderRadius: 6, marginBottom: 12,
           }}
@@ -59,7 +59,7 @@ export default function Sidebar({
           />
           <div style={{
             fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 15,
-            color: '#0A0F1E', letterSpacing: '-0.01em',
+            color: '#0f172a', letterSpacing: '-0.01em',
           }}>Meeting Summariser</div>
         </div>
       </div>
@@ -69,10 +69,10 @@ export default function Sidebar({
         style={{
           display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center',
           width: '100%', padding: '10px 12px', marginBottom: 22,
-          background: '#0A0F1E', color: '#fff',
+          background: '#0f172a', color: '#fff',
           border: 'none', borderRadius: 10, cursor: 'pointer',
           fontSize: 13.5, fontWeight: 700,
-          boxShadow: '0 4px 12px rgba(10,15,30,0.15)',
+          boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
         }}
       >
         <Plus size={15} /> New Session
@@ -96,8 +96,8 @@ export default function Sidebar({
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '9px 12px', marginBottom: 16,
-            background: 'rgba(0,197,176,0.10)', color: '#00706b',
-            border: '1px solid rgba(0,197,176,0.35)', borderRadius: 9,
+            background: 'rgba(13,148,136,0.10)', color: '#0f766e',
+            border: '1px solid rgba(13,148,136,0.35)', borderRadius: 9,
             cursor: 'pointer', fontSize: 13, fontWeight: 700,
           }}
         >
@@ -109,8 +109,8 @@ export default function Sidebar({
       <div style={{ flex: 1 }} />
 
       <div style={{
-        fontSize: 11.5, color: '#9a978d', lineHeight: 1.55,
-        borderTop: '1px solid #e5e2d6', paddingTop: 14,
+        fontSize: 11.5, color: '#94a3b8', lineHeight: 1.55,
+        borderTop: '1px solid #e2e8f0', paddingTop: 14,
       }}>
         Runs entirely on your infrastructure. Nothing leaves your network.
       </div>
@@ -123,7 +123,7 @@ function NavGroup({ title, children }) {
     <div style={{ marginBottom: 22 }}>
       <div style={{
         fontFamily: "'Manrope',sans-serif", fontSize: 11, fontWeight: 800,
-        letterSpacing: '.14em', color: '#9a978d', textTransform: 'uppercase',
+        letterSpacing: '.14em', color: '#94a3b8', textTransform: 'uppercase',
         padding: '0 8px 8px',
       }}>{title}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -136,9 +136,9 @@ function NavGroup({ title, children }) {
 function NavItem({ icon: Icon, label, active, disabled, onClick }) {
   const [hover, setHover] = React.useState(false);
   const bg = active
-    ? '#0A0F1E'
-    : (hover && !disabled ? 'rgba(10,15,30,0.06)' : 'transparent');
-  const fg = active ? '#fff' : (disabled ? '#c9c5b5' : '#3a3833');
+    ? '#0f172a'
+    : (hover && !disabled ? 'rgba(15,23,42,0.06)' : 'transparent');
+  const fg = active ? '#fff' : (disabled ? '#cbd5e1' : '#334155');
   return (
     <button
       onClick={onClick}
@@ -159,7 +159,7 @@ function NavItem({ icon: Icon, label, active, disabled, onClick }) {
       <span style={{ flex: 1 }}>{label}</span>
       {active && (
         <span style={{
-          width: 6, height: 6, borderRadius: '50%', background: '#00C5B0',
+          width: 6, height: 6, borderRadius: '50%', background: '#0d9488',
         }} />
       )}
     </button>

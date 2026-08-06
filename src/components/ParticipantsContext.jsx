@@ -28,7 +28,7 @@ export default function ParticipantsContext({
           placeholder="Alice, Bob, Charlie"
           style={inputStyle}
         />
-        <div style={{ fontSize: 12.5, color: '#9a978d', marginTop: 6 }}>
+        <div style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 6 }}>
           Auto-filled from the transcript. Edit if needed.
         </div>
       </div>
@@ -57,11 +57,11 @@ export default function ParticipantsContext({
         <button
           onClick={() => contextFileRef.current?.click()}
           style={{
-            background: 'transparent', border: '1px dashed #d9d5c5', color: '#66645c',
+            background: 'transparent', border: '1px dashed #cbd5e1', color: '#64748b',
             padding: '8px 14px', borderRadius: 10, fontSize: 13, cursor: 'pointer',
           }}
         >📎 Upload context .txt</button>
-        <div style={{ fontSize: 12.5, color: '#9a978d' }}>
+        <div style={{ fontSize: 12.5, color: '#94a3b8' }}>
           Or paste directly above.
         </div>
       </div>
@@ -77,6 +77,6 @@ export default function ParticipantsContext({
 
 const inputStyle = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
-  border: '1px solid #d9d5c5', background: '#fff', fontSize: 14.5, color: '#111',
+  border: '1px solid #cbd5e1', background: '#fff', fontSize: 14.5, color: '#111',
   outline: 'none', boxSizing: 'border-box',
 };

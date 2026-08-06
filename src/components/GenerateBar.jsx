@@ -38,7 +38,7 @@ export default function GenerateBar({
 
   return (
     <div style={{
-      background: '#ffffff', border: '1px solid #e5e2d6', borderRadius: 14,
+      background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14,
       padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12,
       boxShadow: '0 2px 6px rgba(17,17,17,0.04)',
     }}>
@@ -46,7 +46,7 @@ export default function GenerateBar({
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         <div style={{
           fontSize: 11.5, fontWeight: 800, letterSpacing: '.12em',
-          color: '#9a978d', textTransform: 'uppercase', whiteSpace: 'nowrap',
+          color: '#94a3b8', textTransform: 'uppercase', whiteSpace: 'nowrap',
         }}>Participants</div>
 
         <div style={{
@@ -56,7 +56,7 @@ export default function GenerateBar({
           {chips.map((name, i) => (
             <span key={i} style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
-              background: '#f4f3ee', border: '1px solid #e5e2d6',
+              background: '#f1f5f9', border: '1px solid #e2e8f0',
               borderRadius: 999, padding: '4px 4px 4px 10px',
               fontSize: 13, color: '#111',
             }}>
@@ -66,7 +66,7 @@ export default function GenerateBar({
                 aria-label={`Remove ${name}`}
                 style={{
                   width: 18, height: 18, borderRadius: '50%', border: 'none',
-                  background: 'transparent', cursor: 'pointer', color: '#66645c',
+                  background: 'transparent', cursor: 'pointer', color: '#64748b',
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 }}
               ><X size={11} /></button>
@@ -95,11 +95,11 @@ export default function GenerateBar({
           disabled={!canSubmit || busy}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: (!canSubmit || busy) ? '#c9c5b5' : '#00C5B0',
-            color: '#0A0F1E', border: 'none', borderRadius: 11,
+            background: (!canSubmit || busy) ? '#cbd5e1' : '#0d9488',
+            color: '#0f172a', border: 'none', borderRadius: 11,
             padding: '11px 20px', fontSize: 14, fontWeight: 800,
             cursor: (!canSubmit || busy) ? 'not-allowed' : 'pointer',
-            boxShadow: (!canSubmit || busy) ? 'none' : '0 6px 16px rgba(0,197,176,0.28)',
+            boxShadow: (!canSubmit || busy) ? 'none' : '0 6px 16px rgba(13,148,136,0.28)',
             transition: 'background .15s ease, box-shadow .15s ease',
             whiteSpace: 'nowrap',
           }}
@@ -115,8 +115,8 @@ export default function GenerateBar({
           onClick={() => setContextOpen((v) => !v)}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: 'transparent', border: '1px dashed #d9d5c5',
-            padding: '5px 11px', borderRadius: 999, color: '#66645c',
+            background: 'transparent', border: '1px dashed #cbd5e1',
+            padding: '5px 11px', borderRadius: 999, color: '#64748b',
             fontSize: 12.5, cursor: 'pointer',
           }}
         >
@@ -127,13 +127,13 @@ export default function GenerateBar({
 
         <label style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          fontSize: 12.5, color: '#66645c', cursor: 'pointer',
+          fontSize: 12.5, color: '#64748b', cursor: 'pointer',
         }}>
           <input
             type="checkbox"
             checked={!!isLongRecording}
             onChange={(e) => onLongRecordingChange?.(e.target.checked)}
-            style={{ accentColor: '#00C5B0' }}
+            style={{ accentColor: '#0d9488' }}
           />
           Long recording (&gt;15 min) — hierarchical summarisation
         </label>
@@ -141,15 +141,15 @@ export default function GenerateBar({
         {busy && (
           <div style={{ flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
-              flex: 1, height: 6, background: '#e5e2d6', borderRadius: 999, overflow: 'hidden',
+              flex: 1, height: 6, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden',
             }}>
               <div style={{
                 width: `${Math.min(100, Math.max(0, progress || 0))}%`, height: '100%',
-                background: 'linear-gradient(90deg,#00C5B0,#0A0F1E)',
+                background: 'linear-gradient(90deg,#0d9488,#14b8a6)',
                 transition: 'width .3s ease',
               }} />
             </div>
-            <div style={{ fontSize: 12, color: '#66645c', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>
               {statusMessage || 'Processing…'}
             </div>
           </div>
@@ -165,7 +165,7 @@ export default function GenerateBar({
             placeholder="e.g. Weekly engineering sync. Pay attention to the migration timeline."
             style={{
               width: '100%', minHeight: 76, padding: 10, borderRadius: 10,
-              border: '1px solid #e5e2d6', background: '#faf9f4',
+              border: '1px solid #e2e8f0', background: '#f8fafc',
               fontSize: 13.5, fontFamily: "'Inter',sans-serif", lineHeight: 1.5,
               outline: 'none', resize: 'vertical', boxSizing: 'border-box',
             }}
@@ -181,7 +181,7 @@ export default function GenerateBar({
             <button
               onClick={() => contextFileRef.current?.click()}
               style={{
-                background: 'transparent', border: 'none', color: '#66645c',
+                background: 'transparent', border: 'none', color: '#64748b',
                 fontSize: 12.5, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 5,
               }}

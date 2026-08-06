@@ -116,7 +116,7 @@ export default function FollowUpEmails({ summary }) {
         {assignees.map((a) => (
           <div key={a} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12, alignItems: 'center', marginTop: 8 }}>
             <div style={{ fontSize: 14 }}>
-              <strong>{a}</strong> <span style={{ color: '#9a978d', fontSize: 12.5 }}>· {groups[a].length} task{groups[a].length > 1 ? 's' : ''}</span>
+              <strong>{a}</strong> <span style={{ color: '#94a3b8', fontSize: 12.5 }}>· {groups[a].length} task{groups[a].length > 1 ? 's' : ''}</span>
             </div>
             <input
               value={roster[a] || ''}
@@ -164,10 +164,10 @@ export default function FollowUpEmails({ summary }) {
           {Object.entries(drafts).map(([assignee, body]) => {
             const r = results[assignee];
             const badge = r ? (r.success ? '✅ Sent' : '❌ Failed') : '📝 Draft';
-            const badgeColor = r ? (r.success ? '#10b981' : '#ef4444') : '#00C5B0';
+            const badgeColor = r ? (r.success ? '#10b981' : '#ef4444') : '#0d9488';
             return (
               <details key={assignee} open={!r} style={{
-                border: '1px solid #e5e2d6', borderRadius: 12, marginTop: 10, background: '#fff',
+                border: '1px solid #e2e8f0', borderRadius: 12, marginTop: 10, background: '#fff',
               }}>
                 <summary style={{
                   padding: '12px 14px', cursor: 'pointer', display: 'flex',
@@ -175,8 +175,8 @@ export default function FollowUpEmails({ summary }) {
                 }}>
                   <Badge color={badgeColor}>{badge}</Badge>
                   <strong>{assignee}</strong>
-                  <span style={{ color: '#9a978d', fontSize: 12.5 }}>· {groups[assignee].length} task{groups[assignee].length > 1 ? 's' : ''}</span>
-                  <span style={{ marginLeft: 'auto', color: '#9a978d', fontSize: 12.5 }}>
+                  <span style={{ color: '#94a3b8', fontSize: 12.5 }}>· {groups[assignee].length} task{groups[assignee].length > 1 ? 's' : ''}</span>
+                  <span style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: 12.5 }}>
                     {roster[assignee] || 'no email'}
                   </span>
                 </summary>
@@ -186,7 +186,7 @@ export default function FollowUpEmails({ summary }) {
                     onChange={(e) => setDrafts((d) => ({ ...d, [assignee]: e.target.value }))}
                     style={{
                       width: '100%', minHeight: 220, padding: 12, borderRadius: 10,
-                      border: '1px solid #d9d5c5', fontSize: 13.5, fontFamily: "'Inter', sans-serif",
+                      border: '1px solid #cbd5e1', fontSize: 13.5, fontFamily: "'Inter', sans-serif",
                       lineHeight: 1.5, resize: 'vertical', boxSizing: 'border-box',
                     }}
                   />
@@ -224,10 +224,10 @@ export default function FollowUpEmails({ summary }) {
   );
 }
 
-const stepHead = { fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 15, color: '#0A0F1E' };
-const stepHint = { color: '#66645c', fontSize: 13, marginTop: 2 };
+const stepHead = { fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 15, color: '#0f172a' };
+const stepHint = { color: '#64748b', fontSize: 13, marginTop: 2 };
 const inputStyle = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
-  border: '1px solid #d9d5c5', background: '#fff', fontSize: 14, color: '#111',
+  border: '1px solid #cbd5e1', background: '#fff', fontSize: 14, color: '#111',
   outline: 'none', boxSizing: 'border-box',
 };

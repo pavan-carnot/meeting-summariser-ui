@@ -18,6 +18,15 @@ import {
 const INPUT_VIEWS = new Set(['audio', 'realtime', 'paste', 'text']);
 const RESULT_VIEWS = new Set(['audio-player', 'transcript', 'confidence', 'report']);
 
+// Normalise a raw diarization key (e.g. "SPEAKER_00", "Speaker_1", or a
+// friendly rename like "Alice") into a participant display label.
+// Prevents "Speaker SPEAKER_00" and similar double-prefixing.
+function speakerLabel(raw) {
+  const s = String(raw ?? '?').trim();
+  const m = s.match(/^speaker[_\s-]*(.+)$/i);
+  return m ? `Speaker ${m[1]}` : s;
+}
+
 export default function App() {
   const [activeView, setActiveView] = useState('audio'); // default landing view
   const [languages, setLanguages] = useState([{ code: 'auto', name: 'Auto-detect' }]);
@@ -60,7 +69,7 @@ export default function App() {
     if (td?.transcript && Array.isArray(td.transcript)) {
       const speakers = new Set();
       td.transcript.forEach((seg) => {
-        if (seg.speaker !== undefined) speakers.add(`Speaker ${seg.speaker}`);
+        if (seg.speaker !== undefined) speakers.add(speakerLabel(seg.speaker));
       });
       if (speakers.size) setParticipants([...speakers].sort().join(', '));
     }
@@ -93,9 +102,7 @@ export default function App() {
     if (Array.isArray(updatedData?.transcript)) {
       const speakers = new Set();
       updatedData.transcript.forEach((seg) => {
-        if (seg.speaker !== undefined) {
-          speakers.add(String(seg.speaker).match(/^Speaker /) ? String(seg.speaker) : `Speaker ${seg.speaker}`);
-        }
+        if (seg.speaker !== undefined) speakers.add(speakerLabel(seg.speaker));
       });
       if (speakers.size) setParticipants([...speakers].sort().join(', '));
     }
@@ -159,7 +166,7 @@ export default function App() {
   }, [activeView, hasTranscript, hasSummary]);
 
   return (
-    <div style={{ background: '#efeee8', minHeight: '100vh' }}>
+    <div style={{ background: '#ffffff', minHeight: '100vh' }}>
       <div style={{ display: 'flex', alignItems: 'stretch' }}>
         <Sidebar
           activeView={activeView}
@@ -248,7 +255,7 @@ export default function App() {
                     onChange={(e) => setTranscript(e.target.value)}
                     style={{
                       width: '100%', minHeight: 300, padding: 12, borderRadius: 10,
-                      border: '1px solid #d9d5c5', background: '#faf9f4',
+                      border: '1px solid #cbd5e1', background: '#f8fafc',
                       fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: 12.5,
                       lineHeight: 1.6, whiteSpace: 'pre-wrap', color: '#333',
                       resize: 'vertical', outline: 'none', boxSizing: 'border-box',
@@ -269,7 +276,10 @@ export default function App() {
           {activeView === 'report' && hasSummary && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <SummaryView summary={summary} transcript={transcript} />
-              <FollowUpEmails summary={summary} />
+              {/* Follow-up emails hidden — backend SMTP endpoint not reachable.
+                  Re-enable once /api/email/smtp-status is live or SMTP env is
+                  configured in backend/.env, then restore the line below. */}
+              {/* <FollowUpEmails summary={summary} /> */}
             </div>
           )}
         </main>
@@ -287,7 +297,7 @@ const HEADERS = {
   'audio-player': ['Audio',              'The original recording — play, seek, and download.'],
   'transcript':   ['Transcript & Playback', 'Review the transcript, then generate a summary when you\'re ready.'],
   'confidence':   ['Confidence Scores',  'See where Whisper is confident and where the transcript may need review.'],
-  'report':       ['Final Report',       'Meeting summary, action items, speaker breakdown, and follow-up emails.'],
+  'report':       ['Final Report',       'Meeting summary, action items, and speaker breakdown.'],
 };
 
 function ViewHeader({ activeView, hasResults, onReturnToResults }) {
@@ -301,10 +311,10 @@ function ViewHeader({ activeView, hasResults, onReturnToResults }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <h1 style={{
           fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 30,
-          letterSpacing: '-0.02em', margin: 0, color: '#0A0F1E',
+          letterSpacing: '-0.02em', margin: 0, color: '#0f172a',
         }}>{title}</h1>
         {subtitle && (
-          <p style={{ margin: '4px 0 0', color: '#66645c', fontSize: 14.5 }}>{subtitle}</p>
+          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 14.5 }}>{subtitle}</p>
         )}
       </div>
       {showReturn && (
@@ -312,8 +322,8 @@ function ViewHeader({ activeView, hasResults, onReturnToResults }) {
           onClick={onReturnToResults}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 7,
-            background: 'rgba(0,197,176,0.10)', color: '#00706b',
-            border: '1px solid rgba(0,197,176,0.35)', borderRadius: 999,
+            background: 'rgba(13,148,136,0.10)', color: '#0f766e',
+            border: '1px solid rgba(13,148,136,0.35)', borderRadius: 999,
             padding: '7px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
             whiteSpace: 'nowrap',
           }}
@@ -326,7 +336,7 @@ function ViewHeader({ activeView, hasResults, onReturnToResults }) {
 }
 
 const primaryBtn = {
-  background: '#00C5B0', color: '#0A0F1E', border: 'none', borderRadius: 11,
+  background: '#0d9488', color: '#0f172a', border: 'none', borderRadius: 11,
   padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer',
 };
 

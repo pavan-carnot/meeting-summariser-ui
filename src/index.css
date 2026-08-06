@@ -2,13 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body { margin: 0; padding: 0; }
+/* Page bg matches profile-website: oklch(0.99 0.001 250) — a very
+   subtle cool near-white. Falls back to sRGB hex for older browsers. */
+html, body { margin: 0; padding: 0; background: #fafbfc; background: oklch(0.99 0.001 250); }
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  color: #0f172a;
 }
-::selection { background: #00C5B044; }
+::selection { background: #0d948844; }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(28px); }
@@ -19,3 +22,12 @@ body {
   to { transform: translateX(-50%); }
 }
 @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
+
+@keyframes wordReveal {
+  from { opacity: 0; transform: translateY(20px); filter: blur(3px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0px); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

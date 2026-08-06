@@ -107,15 +107,56 @@ export async function getJob(jobId) {
   return data;
 }
 
+// Ranks pipeline phases so we can drop backward status flips.
+// The backend occasionally reports a prior phase in a later poll (races/caching);
+// without this the UI ping-pongs between e.g. "Transcribing…" and "Converting…".
+const PHASE_ORDER = [
+  { rank: 1, keys: ['upload'] },
+  { rank: 2, keys: ['convert', 'wav'] },
+  { rank: 3, keys: ['transcrib'] },
+  { rank: 4, keys: ['speaker', 'diariz', 'identif'] },
+  { rank: 5, keys: ['summar', 'action', 'final', 'complet'] },
+];
+function phaseRank(msg) {
+  const s = (msg || '').toLowerCase();
+  for (let i = PHASE_ORDER.length - 1; i >= 0; i--) {
+    if (PHASE_ORDER[i].keys.some((k) => s.includes(k))) return PHASE_ORDER[i].rank;
+  }
+  return 0;
+}
+
 // Poll a job until it completes/fails. Calls onUpdate on each poll.
+// Smooths two backend quirks: progress that jumps backward, and status text
+// that flips to an earlier phase mid-run. Callers see monotonic progress
+// and forward-only phase transitions.
 export async function pollJob(jobId, { intervalMs = 2000, maxRetries = 60, onUpdate } = {}) {
   return new Promise((resolve, reject) => {
     let consecutiveErrors = 0;
+    let maxProgress = 0;
+    let maxPhaseRank = 0;
+    let stableMsg = '';
     const tick = async () => {
       try {
         const status = await getJob(jobId);
-        consecutiveErrors = 0; // Reset error counter on successful response
-        if (onUpdate) onUpdate(status);
+        consecutiveErrors = 0;
+
+        // Monotonic progress
+        const rawProg = Number(status.progress) || 0;
+        if (rawProg > maxProgress) maxProgress = rawProg;
+
+        // Forward-only phase text
+        const rawMsg = status.status_message || status.message || status.status || 'Processing…';
+        const nextRank = phaseRank(rawMsg);
+        if (nextRank >= maxPhaseRank) {
+          maxPhaseRank = nextRank;
+          stableMsg = rawMsg;
+        } else if (!stableMsg) {
+          // First message ever — accept even if it doesn't match a known phase.
+          stableMsg = rawMsg;
+        }
+
+        if (onUpdate) onUpdate({ ...status, progress: maxProgress, status_message: stableMsg });
+
         const s = String(status.status || '').toLowerCase();
         if (s === 'completed') return resolve(status);
         if (s === 'failed') return reject(new Error(status.error || status.status_message || `Job ${jobId} failed`));
