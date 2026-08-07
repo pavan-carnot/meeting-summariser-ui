@@ -104,7 +104,7 @@ function HowItWorks({ steps, reveal, stagger }) {
         .how-arrow.is-active { color: #0d9488; opacity: 1; transform: translateX(4px); }
       `}</style>
 
-      <div {...reveal('how-header', { textAlign: 'center', marginBottom: 72 })}>
+      <div {...reveal('how-header', { textAlign: 'center', marginBottom: 72 })} className="lp-how-heading">
         <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.1em', color: '#94a3b8', marginBottom: 12 }}>HOW IT WORKS</div>
         <h2 style={{ fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 42, letterSpacing: '-0.02em', margin: 0, color: '#0f172a' }}>
           From recording to action items
@@ -113,8 +113,10 @@ function HowItWorks({ steps, reveal, stagger }) {
       </div>
 
       {/* Two-row grid: row 1 = numbers + arrows (arrows centered on the
-          number's mid-line), row 2 = title + description under each number. */}
-      <div style={{
+          number's mid-line), row 2 = title + description under each number.
+          On mobile the CSS media query collapses this to a single column,
+          hides the arrows, and lets step blocks stack in source order. */}
+      <div className="lp-how-grid" style={{
         display: 'grid',
         gridTemplateColumns: 'minmax(0,1fr) 64px minmax(0,1fr) 64px minmax(0,1fr) 64px minmax(0,1fr)',
         gridTemplateRows: 'auto auto',
@@ -127,7 +129,7 @@ function HowItWorks({ steps, reveal, stagger }) {
             {/* Row 1: giant centered number */}
             <div
               {...stagger(`step-${i}`, i)}
-              className="how-step"
+              className="how-step lp-how-step"
               style={{
                 gridColumn: (i * 2) + 1,
                 gridRow: 1,
@@ -140,7 +142,7 @@ function HowItWorks({ steps, reveal, stagger }) {
 
             {/* Row 1: arrow between steps, vertically centered on the number */}
             {i < steps.length - 1 && (
-              <div className="how-arrow" style={{
+              <div className="how-arrow lp-how-arrow" style={{
                 gridColumn: (i * 2) + 2,
                 gridRow: 1,
                 alignSelf: 'center',
@@ -152,7 +154,7 @@ function HowItWorks({ steps, reveal, stagger }) {
             )}
 
             {/* Row 2: title + description centered under the number */}
-            <div style={{
+            <div className="lp-how-title-block" style={{
               gridColumn: (i * 2) + 1,
               gridRow: 2,
               textAlign: 'center',
@@ -253,23 +255,13 @@ function FeaturesSection({ features }) {
     <section
       ref={sectionRef}
       id="features"
+      className="lp-features-section"
       style={{
         maxWidth: 1180, margin: '112px auto 112px', padding: '0 24px',
         position: 'relative',
       }}
     >
-      {/* SECTION HEADING.
-          Two synchronized elements:
-          1. A `position: fixed` overlay pinned at the top of the viewport
-             while `headingPinned` is true. Fixed (not sticky) so it can be
-             switched off cleanly the instant the last card would unpin.
-          2. An in-flow placeholder with the heading's natural height so the
-             cards start at the right position whether or not we're pinned.
-          When we're NOT pinned, the placeholder itself shows the heading
-          text — so the heading is visible before scroll-in and after
-          scroll-out. When we ARE pinned, the placeholder is empty and the
-          fixed overlay is what the user sees. */}
-      <div style={{
+      <div className="lp-features-heading" style={{
         padding: '20px 0 22px',
         marginBottom: 16,
         minHeight: HEADER_HEIGHT,
@@ -287,7 +279,7 @@ function FeaturesSection({ features }) {
         </div>
       </div>
       {headingPinned && (
-        <div style={{
+        <div className="lp-features-heading" style={{
           position: 'fixed', top: NAVBAR_BOTTOM, left: 0, right: 0, zIndex: 20,
           background: '#fafbfc',
           padding: '20px 0 22px',
@@ -318,6 +310,7 @@ function FeaturesSection({ features }) {
           return (
             <div
               key={i}
+              className="lp-feature-card"
               style={{
                 position: 'sticky',
                 top: CARD_TOP,      // every card locks at the same line
@@ -455,7 +448,7 @@ export default function Landing() {
 
         {/* NAV — flush to top of viewport */}
         <div style={{ position: 'sticky', top: 0, zIndex: 50, maxWidth: 1180, margin: '0 auto', padding: '12px 24px 0' }}>
-          <div style={{
+          <div className="lp-nav-pill" style={{
             background: 'rgba(255,255,255,0.92)',
             backdropFilter: 'blur(14px)',
             WebkitBackdropFilter: 'blur(14px)',
@@ -470,11 +463,11 @@ export default function Landing() {
                 style={{ width: 38, height: 38, flexShrink: 0, objectFit: 'contain', borderRadius: 11 }}
               />
               <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                <span style={{ fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 16.5 }}>Meeting Summariser</span>
-                <span style={{ fontSize: 12, color: '#94a3b8' }}>by Carnot Research Pvt Ltd</span>
+                <span className="lp-nav-wordmark" style={{ fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 16.5 }}>Meeting Summariser</span>
+                <span className="lp-nav-tagline" style={{ fontSize: 12, color: '#94a3b8' }}>by Carnot Research Pvt Ltd</span>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 34 }}>
+            <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 34 }}>
               <a href="#features" className="lp-anchor" style={{ fontSize: 15, fontWeight: 500, textDecoration: 'none' }}>Features</a>
               <a href="#how" className="lp-anchor" style={{ fontSize: 15, fontWeight: 500, textDecoration: 'none' }}>How it works</a>
               <a href="#security" className="lp-anchor" style={{ fontSize: 15, fontWeight: 500, textDecoration: 'none' }}>Security</a>
@@ -495,12 +488,12 @@ export default function Landing() {
           const subStart   = line3Start + line3.length * CHAR_STAGGER + 0.05;
           const ctaDelay   = subStart + subText.length * CHAR_STAGGER + LETTER_REVEAL_DURATION * 0.4;
           return (
-            <div style={{
+            <div className="lp-hero-grid" style={{
               maxWidth: 1180, margin: '0 auto', padding: '64px 24px 24px',
               display: 'grid', gridTemplateColumns: '1.05fr 1fr', gap: 56, alignItems: 'start',
             }}>
               <div>
-                <div style={{
+                <div className="lp-hero-badge" style={{
                   opacity: 0,
                   animation: `wordReveal .55s cubic-bezier(0.22,1,0.36,1) ${badgeStart}s both`,
                   display: 'inline-flex', alignItems: 'center',
@@ -510,7 +503,7 @@ export default function Landing() {
                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3fae63' }}></span>
                   On-premise · Your data never leaves your network
                 </div>
-                <h1 style={{
+                <h1 className="lp-hero-h1" style={{
                   fontFamily: "'Manrope',sans-serif",
                   fontWeight: 800, fontSize: 62, lineHeight: 1.06, letterSpacing: '-0.025em',
                   margin: '28px 0 24px', color: '#0f172a',
@@ -525,13 +518,13 @@ export default function Landing() {
                     <Words text={line3} color="#0d9488" delay={line3Start} />
                   </span>
                 </h1>
-                <p style={{
+                <p className="lp-hero-sub" style={{
                   fontSize: 18.5, lineHeight: 1.6,
                   color: '#64748b', maxWidth: 480, margin: '0 0 36px',
                 }}>
                   <Words text={subText} delay={subStart} />
                 </p>
-                <div style={{
+                <div className="lp-hero-ctas" style={{
                   opacity: 0,
                   animation: `wordReveal .55s cubic-bezier(0.22,1,0.36,1) ${ctaDelay.toFixed(2)}s both`,
                   display: 'flex', gap: 16, alignItems: 'center',
@@ -604,12 +597,12 @@ export default function Landing() {
           maxWidth: 1180, margin: '112px auto 0', padding: '0 24px', boxSizing: 'border-box',
         })}>
           <div style={{
-            background: '#0f172a', borderRadius: 28, padding: '64px 64px',
+            background: '#0f172a', borderRadius: 28, padding: '64px',
             display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 48, alignItems: 'center',
-          }}>
+          }} className="lp-security-card">
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.1em', color: '#0d9488', marginBottom: 14 }}>SECURITY FIRST</div>
-              <h3 style={{
+              <h3 className="lp-security-h3" style={{
                 fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 36, color: '#ffffff',
                 margin: '0 0 16px', lineHeight: 1.2, letterSpacing: '-0.015em',
               }}>Your meetings never leave your network</h3>
@@ -634,7 +627,7 @@ export default function Landing() {
         {/* CTA */}
         <div {...reveal('cta', {
           maxWidth: 1180, margin: '112px auto 0', padding: '0 24px', textAlign: 'center',
-        })}>
+        })} className="lp-cta">
           <h2 style={{
             fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 44,
             letterSpacing: '-0.02em', margin: '0 0 18px',
@@ -657,7 +650,7 @@ export default function Landing() {
         </div>
 
         {/* FOOTER */}
-        <div style={{
+        <div className="lp-footer" style={{
           maxWidth: 1180, margin: '112px auto 0', padding: '36px 24px 44px',
           borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between',
           alignItems: 'center', flexWrap: 'wrap', gap: 20,
@@ -670,7 +663,7 @@ export default function Landing() {
             />
             <span style={{ fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 15.5 }}>Carnot Research</span>
           </div>
-          <div style={{ display: 'flex', gap: 30 }}>
+          <div className="lp-footer-links" style={{ display: 'flex', gap: 30 }}>
             <a href="#features" className="lp-anchor" style={{ fontSize: 14.5, textDecoration: 'none' }}>Features</a>
             <a href="#how" className="lp-anchor" style={{ fontSize: 14.5, textDecoration: 'none' }}>How it works</a>
             <a href="#security" className="lp-anchor" style={{ fontSize: 14.5, textDecoration: 'none' }}>Security</a>

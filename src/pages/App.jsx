@@ -167,7 +167,7 @@ export default function App() {
 
   return (
     <div style={{ background: '#ffffff', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', alignItems: 'stretch' }}>
+      <div className="app-shell" style={{ display: 'flex', alignItems: 'stretch' }}>
         <Sidebar
           activeView={activeView}
           onNavigate={setActiveView}
@@ -177,7 +177,7 @@ export default function App() {
         />
 
         {/* MAIN PANE */}
-        <main style={{ flex: 1, minWidth: 0, padding: '32px 40px 60px' }}>
+        <main className="app-main" style={{ flex: 1, minWidth: 0, padding: '32px 40px 60px' }}>
           <ViewHeader
             activeView={activeView}
             hasResults={hasTranscript}
@@ -304,7 +304,7 @@ function ViewHeader({ activeView, hasResults, onReturnToResults }) {
   const [title, subtitle] = HEADERS[activeView] || ['', ''];
   const showReturn = hasResults && INPUT_VIEWS.has(activeView);
   return (
-    <div style={{
+    <div className="app-view-header" style={{
       marginBottom: 22, display: 'flex', alignItems: 'flex-start',
       justifyContent: 'space-between', gap: 16, flexWrap: 'wrap',
     }}>

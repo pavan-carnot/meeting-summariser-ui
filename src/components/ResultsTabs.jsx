@@ -13,7 +13,7 @@ const TABS = [
 
 export default function ResultsTabs({ activeView, onNavigate, hasSummary }) {
   return (
-    <div style={{
+    <div className="app-results-tabs" style={{
       display: 'flex', gap: 4, borderBottom: '1px solid #e2e8f0',
       marginBottom: 22, overflowX: 'auto',
     }}>

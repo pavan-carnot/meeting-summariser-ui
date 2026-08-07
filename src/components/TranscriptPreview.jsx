@@ -225,7 +225,7 @@ export default function TranscriptPreview({
       </div>
 
       {/* Legend + metrics */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 12.5, color: '#64748b', marginBottom: 10 }}>
+      <div className="app-transcript-legend" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 12.5, color: '#64748b', marginBottom: 10 }}>
         <span>🟢 High (≥90%)</span>
         <span>🟡 Medium (70–89%)</span>
         <span>🔴 Low (&lt;70%)</span>
@@ -247,7 +247,7 @@ export default function TranscriptPreview({
 
       {/* Audio player */}
       {audioSrc && (
-        <div style={{
+        <div className="app-audio-player" style={{
           display: 'flex', alignItems: 'center', gap: 12,
           background: '#f8fafc', border: '1px solid #e2e8f0',
           color: '#111', padding: '10px 14px', borderRadius: 12, marginBottom: 12,
@@ -289,7 +289,7 @@ export default function TranscriptPreview({
             gap: 10,
           }}>
             {distinctSpeakers.map((sp) => (
-              <label key={sp} style={{
+              <label key={sp} className="app-rename-row" style={{
                 display: 'grid', gridTemplateColumns: 'max-content 1fr',
                 alignItems: 'center', gap: 10,
               }}>

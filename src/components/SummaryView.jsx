@@ -108,7 +108,7 @@ export default function SummaryView({ summary, transcript }) {
       </div>
 
       {tab === 'summary' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div className="app-summary-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
           <div>
             <h4 style={sectionHeadStyle}>Summary</h4>
             <p style={{ margin: 0, color: '#333', lineHeight: 1.6, fontSize: 14.5 }}>

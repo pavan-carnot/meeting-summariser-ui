@@ -25,7 +25,7 @@ export default function Sidebar({
   ];
 
   return (
-    <aside style={{
+    <aside className="app-sidebar" style={{
       position: 'sticky', top: 0, alignSelf: 'flex-start',
       height: '100vh',
       width: 260, flexShrink: 0,
@@ -66,6 +66,7 @@ export default function Sidebar({
 
       <button
         onClick={onNewSession}
+        className="app-sidebar-newsession"
         style={{
           display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center',
           width: '100%', padding: '10px 12px', marginBottom: 22,
@@ -108,7 +109,7 @@ export default function Sidebar({
 
       <div style={{ flex: 1 }} />
 
-      <div style={{
+      <div className="app-sidebar-footer" style={{
         fontSize: 11.5, color: '#94a3b8', lineHeight: 1.55,
         borderTop: '1px solid #e2e8f0', paddingTop: 14,
       }}>
@@ -121,7 +122,7 @@ export default function Sidebar({
 function NavGroup({ title, children }) {
   return (
     <div style={{ marginBottom: 22 }}>
-      <div style={{
+      <div className="app-sidebar-group-title" style={{
         fontFamily: "'Manrope',sans-serif", fontSize: 11, fontWeight: 800,
         letterSpacing: '.14em', color: '#94a3b8', textTransform: 'uppercase',
         padding: '0 8px 8px',

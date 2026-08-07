@@ -124,7 +124,7 @@ export default function LiveRecording({ languages, onComplete }) {
 
   return (
     <Card>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+      <div className="app-form-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <div>
           <Label>Audio language</Label>
           <select value={language} onChange={(e) => setLanguage(e.target.value)} style={selectStyle}>

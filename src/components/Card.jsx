@@ -1,8 +1,9 @@
 import React from 'react';
 
-export function Card({ children, style, ...rest }) {
+export function Card({ children, style, className, ...rest }) {
   return (
     <div
+      className={['app-card', className].filter(Boolean).join(' ')}
       style={{
         background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 16,
         padding: 24, boxShadow: '0 1px 0 rgba(17,17,17,0.03), 0 4px 12px rgba(17,17,17,0.03)',

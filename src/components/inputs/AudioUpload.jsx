@@ -118,7 +118,7 @@ export default function AudioUpload({ languages, onComplete }) {
 
   return (
     <Card>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+      <div className="app-form-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <div>
           <Label>Audio language</Label>
           <select
