@@ -258,6 +258,14 @@ body {
   .app-summary-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
 }
 
+/* SummaryView download buttons: top-right beside tabs on desktop, bottom
+   of the card on mobile — keeps the mobile top row clean for the tabs. */
+.app-downloads-bottom { display: none !important; }
+@media (max-width: 700px) {
+  .app-downloads-top    { display: none !important; }
+  .app-downloads-bottom { display: flex !important; }
+}
+
 /* TranscriptPreview */
 @media (max-width: 640px) {
   .app-transcript-legend { gap: 8px !important; font-size: 11.5px !important; }
