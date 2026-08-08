@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowLeft, Plus, Upload, Mic, FileText, FileUp, ArrowRight,
+  ArrowLeft, Plus, Upload, Mic, FileText, FileUp, ArrowRight, X,
 } from 'lucide-react';
 
 // Left navigation. Only INPUT lives here — the sidebar is the way to pick
@@ -10,12 +10,18 @@ import {
 //
 // A single "Return to results" bridge appears below the INPUT list once
 // there's a session to return to.
+//
+// Mobile: renders as an off-canvas drawer (see .app-sidebar rules in
+// index.css). `open` toggles the translateX; `onClose` is wired to the
+// X button + parent-owned backdrop.
 export default function Sidebar({
   activeView,
   onNavigate,
   hasResults,
   onNewSession,
   onReturnToResults,
+  open = false,
+  onClose,
 }) {
   const inputItems = [
     { id: 'audio',    label: 'Upload Audio', icon: Upload },
@@ -25,16 +31,34 @@ export default function Sidebar({
   ];
 
   return (
-    <aside className="app-sidebar" style={{
-      position: 'sticky', top: 0, alignSelf: 'flex-start',
-      height: '100vh',
-      width: 260, flexShrink: 0,
-      background: '#f8fafc', borderRight: '1px solid #e2e8f0',
-      display: 'flex', flexDirection: 'column',
-      padding: '22px 18px 18px',
-      boxSizing: 'border-box',
-      overflowY: 'auto',
-    }}>
+    <aside
+      className={`app-sidebar${open ? ' is-open' : ''}`}
+      style={{
+        position: 'sticky', top: 0, alignSelf: 'flex-start',
+        height: '100vh',
+        width: 260, flexShrink: 0,
+        background: '#f8fafc', borderRight: '1px solid #e2e8f0',
+        display: 'flex', flexDirection: 'column',
+        padding: '22px 18px 18px',
+        boxSizing: 'border-box',
+        overflowY: 'auto',
+      }}
+    >
+      {/* Mobile-only close button. Hidden on desktop via CSS. */}
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close menu"
+        className="app-sidebar-close"
+        style={{
+          position: 'absolute', top: 10, right: 10,
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          padding: 6, borderRadius: 8, color: '#475569',
+          lineHeight: 0,
+        }}
+      >
+        <X size={20} />
+      </button>
       <div style={{ marginBottom: 20 }}>
         <Link
           to="/"

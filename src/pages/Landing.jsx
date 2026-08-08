@@ -447,7 +447,7 @@ export default function Landing() {
       <div style={{ width: '100%', color: '#0f172a' }}>
 
         {/* NAV — flush to top of viewport */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 50, maxWidth: 1180, margin: '0 auto', padding: '12px 24px 0' }}>
+        <div className="lp-nav-wrap" style={{ position: 'sticky', top: 0, zIndex: 50, maxWidth: 1180, margin: '0 auto', padding: '12px 24px 0' }}>
           <div className="lp-nav-pill" style={{
             background: 'rgba(255,255,255,0.92)',
             backdropFilter: 'blur(14px)',
@@ -477,9 +477,9 @@ export default function Landing() {
 
         {/* HERO */}
         {(() => {
-          const line1 = 'Every meeting.';
-          const line2 = 'Organised. Actionable.';
-          const line3 = 'Accountable.';
+          const line1 = 'Every meeting';
+          const line2 = 'Organised  Actionable';
+          const line3 = 'Accountable';
           const subText = 'AI-powered meeting intelligence that automatically creates summaries, assigns owners, tracks decisions, and captures deadlines.';
           const badgeStart = 0.05;
           const line1Start = 0.2;

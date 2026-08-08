@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Menu } from 'lucide-react';
 import AudioUpload from '../components/inputs/AudioUpload.jsx';
 import LiveRecording from '../components/inputs/LiveRecording.jsx';
 import PasteText from '../components/inputs/PasteText.jsx';
@@ -30,6 +31,13 @@ function speakerLabel(raw) {
 export default function App() {
   const [activeView, setActiveView] = useState('audio'); // default landing view
   const [languages, setLanguages] = useState([{ code: 'auto', name: 'Auto-detect' }]);
+
+  // Mobile-only drawer state. Desktop ignores this (CSS keeps the sidebar
+  // in its always-visible column at >900px). Any nav interaction closes
+  // the drawer so the newly-selected view is immediately visible.
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const closeSidebar = () => setSidebarOpen(false);
+  const handleNavigate = (view) => { setActiveView(view); closeSidebar(); };
 
   // Transcript state — persisted across view switches
   const [transcript, setTranscript] = useState('');
@@ -167,13 +175,40 @@ export default function App() {
 
   return (
     <div style={{ background: '#ffffff', minHeight: '100vh' }}>
+      {/* Mobile top bar — hamburger + wordmark. Hidden on desktop via CSS.
+          Sits inside the flow so the main content pushes down under it. */}
+      <div className="app-mobile-menubar">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+          className="app-mobile-menubtn"
+        >
+          <Menu size={20} />
+        </button>
+        <div className="app-mobile-wordmark">Meeting Summariser</div>
+      </div>
+
+      {/* Drawer scrim. `is-open` reveals it; click closes the drawer.
+          Hidden on desktop by CSS since the sidebar is always visible there. */}
+      <div
+        className={`app-sidebar-backdrop${sidebarOpen ? ' is-open' : ''}`}
+        onClick={closeSidebar}
+        aria-hidden="true"
+      />
+
       <div className="app-shell" style={{ display: 'flex', alignItems: 'stretch' }}>
         <Sidebar
           activeView={activeView}
-          onNavigate={setActiveView}
+          onNavigate={handleNavigate}
           hasResults={hasTranscript}
-          onNewSession={resetSession}
-          onReturnToResults={() => setActiveView(hasSummary ? 'report' : 'transcript')}
+          onNewSession={() => { resetSession(); closeSidebar(); }}
+          onReturnToResults={() => {
+            setActiveView(hasSummary ? 'report' : 'transcript');
+            closeSidebar();
+          }}
+          open={sidebarOpen}
+          onClose={closeSidebar}
         />
 
         {/* MAIN PANE */}

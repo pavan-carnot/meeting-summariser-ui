@@ -41,6 +41,16 @@ body {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Landing: Nav ── */
+/* Sticky navbar wrapper backdrop. The floating pill has semi-transparent
+   white (92% + backdrop-blur), but the wrapper AROUND it (12px top padding
+   + 24px side padding) was fully transparent — so previously-pinned sticky
+   content (features cards) scrolling upward behind the navbar bled through
+   the 12px top strip and the side strips as you scrolled into the next
+   section. Solid page-bg colour here masks that bleed. Same colour as
+   body, so the wrapper is visually invisible — the floating-pill aesthetic
+   is preserved at every scroll position. */
+.lp-nav-wrap { background: #fafbfc; }
+
 @media (max-width: 640px) {
   .lp-nav-pill { flex-wrap: wrap !important; gap: 10px !important; padding: 12px 16px !important; }
   .lp-nav-links { gap: 18px !important; font-size: 13px !important; }
@@ -73,12 +83,34 @@ body {
   .lp-feature-card {
     grid-template-columns: 1fr !important;
     padding: 28px 22px !important;
-    min-height: 320px !important;
+    /* Uniform mobile card height. Was 320px, but per-card content lengths
+       differ (Card 5 vs Card 6 descriptions), so heights diverged and the
+       taller card (5, light palette) bled around the shorter one (6, dark)
+       during sticky-stacking — reading as an overlap glitch. 380 matches
+       desktop min-height + the trailing spacer, so all pinned cards fully
+       cover each other regardless of description length. */
+    min-height: 380px !important;
     gap: 20px !important;
+    /* The pinned Features heading is content-sized, so on narrow phones the
+       h2 wraps to 2–3 lines and the heading grows past the JS-reserved
+       HEADER_HEIGHT (112px). That leaves the sticky-pinned card starting
+       *underneath* the pinned heading — its chip/glyph get clipped.
+       Push the card's sticky top past the worst-case (3-line) pinned-heading
+       bottom to keep the card fully visible below it. Overrides the inline
+       `top: CARD_TOP` (=226px) that Landing.jsx sets from a JS constant. */
+    top: 280px !important;
   }
   .lp-feature-card h3 { font-size: 24px !important; }
   .lp-features-section { margin: 72px auto 72px !important; }
-  .lp-features-heading h2 { font-size: 30px !important; }
+  /* Tighten line-height so heading height is predictable (browser default
+     'normal' for Manrope is ~1.4, which made the pinned block taller than
+     the JS-reserved space and pushed it onto the card below). */
+  .lp-features-heading h2 { font-size: 28px !important; line-height: 1.15 !important; }
+}
+/* Very narrow phones: shrink the h2 one more notch so it doesn't wrap to
+   3 lines, keeping the pinned heading + card gap consistent. */
+@media (max-width: 400px) {
+  .lp-features-heading h2 { font-size: 24px !important; }
 }
 
 /* ── Landing: How it works ── */
@@ -120,23 +152,92 @@ body {
   .lp-section-gap { margin-top: 80px !important; }
 }
 
+/* ── Landing: uniform mobile section rhythm ─────────────────────────────
+   Each section owns its top gap so transitions between sections feel
+   intentional and consistent. Previously #features → #how had only 72px
+   (features' bottom margin + how's 0 top) while every other transition
+   was 112px — the odd-one-out looked jarring on scroll. Standardising to
+   96px on mobile: generous enough to breathe, tighter than desktop 112. */
+@media (max-width: 900px) {
+  .lp-features-section {
+    /* Was `margin: 72px auto 72px`. Bottom is now owned by the next section. */
+    margin: 96px auto 0 !important;
+  }
+  #how, #security, .lp-cta {
+    margin-top: 96px !important;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    APP page (product)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Sidebar collapses to a top strip on tablet + mobile */
+/* ─── Sidebar: off-canvas drawer on mobile ──────────────────────────────
+   Desktop keeps the always-visible 260px column (inline styles in
+   Sidebar.jsx). At ≤900px the sidebar slides in from the left, driven
+   by an `is-open` class the parent toggles; a scrim behind captures
+   taps to close; a sticky top menubar exposes the hamburger.
+   The mobile-only chrome (menubar, backdrop, close button) is hidden
+   at desktop widths below. */
+.app-mobile-menubar { display: none; }
+.app-sidebar-close   { display: none; }
+.app-sidebar-backdrop { display: none; }
+
 @media (max-width: 900px) {
+  /* Mobile top bar — sticky, holds the hamburger + wordmark */
+  .app-mobile-menubar {
+    display: flex; align-items: center; gap: 12px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 16px;
+    position: sticky; top: 0; z-index: 40;
+  }
+  .app-mobile-menubtn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; padding: 0;
+    border: 1px solid #e2e8f0; border-radius: 10px;
+    background: #f8fafc; color: #0f172a; cursor: pointer;
+  }
+  .app-mobile-menubtn:active { background: #e2e8f0; }
+  .app-mobile-wordmark {
+    font-family: 'Manrope', sans-serif; font-weight: 800;
+    font-size: 15px; letter-spacing: -0.01em; color: #0f172a;
+  }
+  .app-sidebar-close { display: inline-flex; }
+
+  /* Off-canvas drawer */
   .app-shell { flex-direction: column !important; }
   .app-sidebar {
-    position: relative !important; top: auto !important;
-    height: auto !important; width: 100% !important;
-    border-right: none !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-    padding: 14px 18px !important;
-    overflow: visible !important;
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    height: 100vh !important;
+    height: 100svh !important;
+    width: 288px !important;
+    max-width: 86vw !important;
+    z-index: 60 !important;
+    padding: 22px 18px 18px !important;
+    box-shadow: 20px 0 44px rgba(15, 23, 42, 0.18);
+    transform: translateX(-100%);
+    transition: transform .28s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow-y: auto !important;
+    border-right: 1px solid #e2e8f0 !important;
+    border-bottom: none !important;
   }
+  .app-sidebar.is-open { transform: translateX(0); }
+
+  /* Scrim behind the drawer — tap to close */
+  .app-sidebar-backdrop {
+    display: block;
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, 0.42);
+    z-index: 55;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .22s ease;
+  }
+  .app-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
+
   .app-sidebar-group-title { font-size: 10.5px !important; padding-bottom: 6px !important; }
-  .app-sidebar-footer { display: none !important; }
   .app-sidebar-newsession { margin-bottom: 14px !important; padding: 9px 12px !important; }
   .app-main { padding: 20px 20px 60px !important; }
   .app-view-header h1 { font-size: 24px !important; }
