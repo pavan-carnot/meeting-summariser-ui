@@ -319,9 +319,6 @@ function FeaturesSection({ features }) {
                 borderRadius: 24,
                 padding: '38px 44px',
                 minHeight: CARD_MIN_H,
-                // Ambient glow (0 offset) so the shadow reads on the top edge
-                // too — the previous 24px-down shadow was clipped above.
-                boxShadow: '0 0 40px rgba(15,23,42,0.10), 0 20px 44px rgba(15,23,42,0.14)',
                 display: 'grid',
                 gridTemplateColumns: '1fr 1.25fr',
                 gap: 36,
@@ -438,8 +435,8 @@ export default function Landing() {
         /* Nav anchor links must clear the sticky nav (~90px) so target headings
            don't hide behind it. Applied to every scroll target on the page. */
         [id="features"], [id="how"], [id="security"] { scroll-margin-top: 96px; }
-        .lp-feature-card { transition: transform .3s ease, box-shadow .3s ease; }
-        .lp-feature-card:hover { transform: translateY(-6px); box-shadow: 0 2px 0 rgba(15,23,42,0.04), 0 24px 48px rgba(15,23,42,0.10); }
+        .lp-feature-card { transition: transform .3s ease; }
+        .lp-feature-card:hover { transform: translateY(-6px); }
         .lp-anchor { color: #64748b; }
         .lp-anchor:hover { color: #0f172a; }
       `}</style>

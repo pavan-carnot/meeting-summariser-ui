@@ -78,32 +78,46 @@ export function AudioPlayerView({ audioBlob, audioUrl }) {
         </div>
       )}
 
+      {/* Player card — white surface with soft elevation and a subtle
+          teal wash at the leading edge. On the app's light palette but
+          with enough visual weight not to disappear; the teal-glowing
+          play button carries the brand accent. */}
       <div style={{
-        background: 'linear-gradient(150deg,#0f172a 0%,#1a2136 100%)',
-        borderRadius: 18, padding: '28px 26px', color: '#fff',
-        display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap',
+        background: 'linear-gradient(90deg, rgba(13,148,136,0.06) 0%, #ffffff 45%, #ffffff 100%)',
+        border: '1px solid #e2e8f0',
+        borderRadius: 16,
+        padding: '22px 24px',
+        display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
+        color: '#0f172a',
+        boxShadow: '0 4px 16px rgba(15,23,42,0.06)',
       }}>
         <button
           onClick={toggle}
+          aria-label={playing ? 'Pause' : 'Play'}
           style={{
-            width: 64, height: 64, borderRadius: '50%', border: 'none', cursor: 'pointer',
-            background: '#0d9488', color: '#0f172a',
+            width: 60, height: 60, borderRadius: '50%', border: 'none', cursor: 'pointer',
+            background: '#0d9488', color: '#ffffff',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 10px 26px rgba(13,148,136,0.35)',
+            flexShrink: 0,
+            boxShadow: '0 8px 22px rgba(13,148,136,0.32)',
+            transition: 'transform .18s ease, box-shadow .18s ease',
           }}
-        >{playing ? <Pause size={22} /> : <Play size={22} />}</button>
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.04)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+        >{playing ? <Pause size={22} /> : <Play size={22} style={{ marginLeft: 2 }} />}</button>
 
         <div style={{ flex: 1, minWidth: 220 }}>
           <div style={{
             fontFamily: 'ui-monospace, monospace', fontSize: 13,
-            color: 'rgba(255,255,255,0.7)', marginBottom: 8,
+            color: '#475569', marginBottom: 10, fontWeight: 600,
+            letterSpacing: '.02em',
           }}>
-            {fmtTime(time)} / {fmtTime(duration)}
+            {fmtTime(time)} <span style={{ color: '#94a3b8', fontWeight: 500 }}>/ {fmtTime(duration)}</span>
           </div>
           <input
             type="range" min="0" max={duration || 0} step="0.1" value={time}
             onChange={(e) => { const el = audioRef.current; if (el) el.currentTime = parseFloat(e.target.value); }}
-            style={{ width: '100%', accentColor: '#0d9488' }}
+            style={{ width: '100%', accentColor: '#0d9488', cursor: 'pointer' }}
           />
         </div>
       </div>
