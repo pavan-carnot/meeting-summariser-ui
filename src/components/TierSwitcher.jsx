@@ -12,8 +12,8 @@ export default function TierSwitcher({
 
   return (
     <div className="app-tier-switcher" style={{
-      background: '#faf5ff',
-      border: '1px solid #e9d5ff',
+      background: '#f8fafc',
+      border: '1px solid #e2e8f0',
       borderRadius: 14,
       padding: '12px 16px',
       marginBottom: 20,
@@ -26,13 +26,13 @@ export default function TierSwitcher({
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: isPremium ? '#f3e8ff' : '#f0fdf4',
-          border: `1px solid ${isPremium ? '#c084fc' : '#bbf7d0'}`,
+          background: isPremium ? '#fef3c7' : '#e0e7ff',
+          border: `1px solid ${isPremium ? '#fde68a' : '#c7d2fe'}`,
           borderRadius: 999, padding: '4px 12px',
           fontSize: 12.5, fontWeight: 700,
-          color: isPremium ? '#7e22ce' : '#0d9488',
+          color: isPremium ? '#92400e' : '#3730a3',
         }}>
-          {isPremium ? <Crown size={14} color="#a855f7" /> : <Sparkles size={14} color="#0d9488" />}
+          {isPremium ? <Crown size={14} color="#d97706" /> : <Sparkles size={14} color="#4338ca" />}
           {isPremium ? 'Premium Tier (Restricted)' : 'Free Demo Tier'}
         </div>
         {activeLimitsText && (
@@ -45,7 +45,7 @@ export default function TierSwitcher({
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {/* Tier Switcher Buttons */}
         <div style={{
-          display: 'inline-flex', background: '#e9d5ff', borderRadius: 10, padding: 2,
+          display: 'inline-flex', background: '#e2e8f0', borderRadius: 10, padding: 2,
         }}>
           <button
             type="button"
@@ -53,7 +53,7 @@ export default function TierSwitcher({
             style={{
               padding: '6px 12px', borderRadius: 8, border: 'none',
               background: tier === 'free' ? '#ffffff' : 'transparent',
-              color: tier === 'free' ? '#0f172a' : '#64748b',
+              color: tier === 'free' ? '#3730a3' : '#64748b',
               fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
               boxShadow: tier === 'free' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
             }}
@@ -67,11 +67,11 @@ export default function TierSwitcher({
             }}
             style={{
               padding: '6px 12px', borderRadius: 8, border: 'none',
-              background: isPremium ? '#f3e8ff' : 'transparent',
-              color: isPremium ? '#6b21a8' : '#64748b',
+              background: isPremium ? '#fef3c7' : 'transparent',
+              color: isPremium ? '#92400e' : '#64748b',
               fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
               display: 'inline-flex', alignItems: 'center', gap: 4,
-              boxShadow: isPremium ? '0 2px 6px rgba(192,132,252,0.3)' : 'none',
+              boxShadow: isPremium ? '0 2px 6px rgba(217,119,6,0.2)' : 'none',
             }}
           >
             Premium <Lock size={11} color="#94a3b8" />
@@ -83,13 +83,13 @@ export default function TierSwitcher({
           type="button"
           onClick={() => onOpenPaywall('Premium Tier is currently restricted. Payment gateway integration is in progress.')}
           style={{
-            background: '#f3e8ff',
-            color: '#7e22ce',
-            border: '1px solid #c084fc',
+            background: '#fef3c7',
+            color: '#92400e',
+            border: '1px solid #fde68a',
             borderRadius: 8,
             padding: '6px 14px', fontWeight: 700, fontSize: 12.5,
             cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
-            boxShadow: '0 2px 6px rgba(192, 132, 252, 0.25)',
+            boxShadow: '0 2px 6px rgba(217, 119, 6, 0.2)',
             transition: 'all 0.2s ease',
           }}
         >

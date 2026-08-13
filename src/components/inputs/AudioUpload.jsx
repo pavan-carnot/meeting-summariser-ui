@@ -18,16 +18,16 @@ const TIER_LIMITS = {
     name: 'Premium',
     maxDurationSec: 10800, // 3 hours
     maxSizeMB: 500,        // 500 MB
-    badgeColor: '#7e22ce',
-    badgeBg: '#faf5ff',
+    badgeColor: '#92400e',
+    badgeBg: '#fef3c7',
   },
   premiere: {
     id: 'premium',
     name: 'Premium',
     maxDurationSec: 10800, // 3 hours
     maxSizeMB: 500,        // 500 MB
-    badgeColor: '#7e22ce',
-    badgeBg: '#faf5ff',
+    badgeColor: '#92400e',
+    badgeBg: '#fef3c7',
   },
 };
 
@@ -316,14 +316,14 @@ export default function AudioUpload({ languages, onComplete }) {
               fontWeight: 600,
               padding: '6px 14px',
               borderRadius: 8,
-              background: '#f3e8ff',
-              color: '#7e22ce',
-              border: '1px solid #c084fc',
+              background: '#fef3c7',
+              color: '#92400e',
+              border: '1px solid #fde68a',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              boxShadow: '0 2px 6px rgba(192,132,252,0.25)',
+              boxShadow: '0 2px 6px rgba(217,119,6,0.2)',
             }}
           >
             <Crown size={13} color="#d97706" /> Premium Tier 🔒

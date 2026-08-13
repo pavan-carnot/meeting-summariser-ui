@@ -39,26 +39,26 @@ export default function PaywallModal({ isOpen, onClose, limitReason = '' }) {
 
         {/* Modal Header */}
         <div style={{
-          background: 'linear-gradient(135deg, #faf5ff, #f3e8ff, #e9d5ff)',
+          background: 'linear-gradient(135deg, #fffbeb, #fef3c7, #fde68a)',
           padding: '24px 24px 20px',
-          color: '#4c1d95',
-          borderBottom: '1px solid #e9d5ff',
+          color: '#78350f',
+          borderBottom: '1px solid #fde68a',
         }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             background: '#ffffff',
-            border: '1px solid #c084fc',
+            border: '1px solid #fde68a',
             padding: '4px 12px', borderRadius: 999,
             fontSize: 12, fontWeight: 700, letterSpacing: '0.04em',
             textTransform: 'uppercase', marginBottom: 10,
-            color: '#7e22ce',
+            color: '#b45309',
           }}>
             <Crown size={14} color="#d97706" /> Premium Tier Restricted
           </div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 6px', color: '#3b0764' }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 6px', color: '#78350f' }}>
             {limitReason ? 'Premium Tier Required' : 'Premium Tier Coming Soon'}
           </h2>
-          <p style={{ fontSize: 13.5, color: '#6b21a8', margin: 0, lineHeight: 1.4, fontWeight: 500 }}>
+          <p style={{ fontSize: 13.5, color: '#92400e', margin: 0, lineHeight: 1.4, fontWeight: 500 }}>
             Payment gateway integration is currently in progress. Audio ingestion is strictly limited to Free Demo quotas.
           </p>
         </div>
@@ -93,8 +93,8 @@ export default function PaywallModal({ isOpen, onClose, limitReason = '' }) {
           </div>
 
           <div style={{
-            background: '#faf5ff',
-            border: '1px solid #e9d5ff',
+            background: '#fffbeb',
+            border: '1px solid #fde68a',
             borderRadius: 14,
             padding: '14px 16px',
             marginBottom: 20,
@@ -103,14 +103,14 @@ export default function PaywallModal({ isOpen, onClose, limitReason = '' }) {
             justifyContent: 'space-between',
           }}>
             <div>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#3b0764' }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#78350f' }}>
                 Premium Tier Membership ($19/mo)
               </div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>
+              <div style={{ fontSize: 12, color: '#92400e' }}>
                 Will unlock up to 3-hour audio processing &amp; 500 MB files once launched.
               </div>
             </div>
-            <Lock size={20} color="#7e22ce" style={{ flexShrink: 0, marginLeft: 10 }} />
+            <Lock size={20} color="#d97706" style={{ flexShrink: 0, marginLeft: 10 }} />
           </div>
 
           <button
@@ -119,13 +119,13 @@ export default function PaywallModal({ isOpen, onClose, limitReason = '' }) {
               width: '100%',
               padding: '12px 16px',
               borderRadius: 12,
-              background: 'linear-gradient(135deg, #c084fc, #a855f7)',
+              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
               color: '#ffffff',
               border: 'none',
               fontWeight: 700,
               fontSize: 14.5,
               cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(168, 85, 247, 0.35)',
+              boxShadow: '0 4px 14px rgba(217, 119, 6, 0.35)',
             }}
           >
             I Understand (Stay on Free Demo)
