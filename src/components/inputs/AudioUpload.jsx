@@ -493,7 +493,7 @@ export default function AudioUpload({ languages, onComplete }) {
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
             <ShieldAlert size={18} style={{ flexShrink: 0, marginTop: 1 }} />
             <div>
-              <div style={{ fontWeight: 600 }}>Audio Restriction Reached</div>
+              <div style={{ fontWeight: 600 }}>{isLimitError ? 'Audio Restriction Reached' : 'Audio Processing Error'}</div>
               <div style={{ marginTop: 2 }}>{error}</div>
             </div>
           </div>
