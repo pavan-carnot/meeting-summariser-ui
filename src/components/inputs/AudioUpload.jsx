@@ -172,11 +172,53 @@ export default function AudioUpload({ languages, onComplete }) {
     }
   };
 
+  const [isSampleDemo, setIsSampleDemo] = useState(false);
+
+  const loadSampleDemo = () => {
+    const sampleFile = new File(["sample_audio"], "sample_quarterly_meeting.mp3", { type: "audio/mp3" });
+    setFile(sampleFile);
+    setFileMeta({ durationSec: 222, sizeMB: 14.8 });
+    setIsSampleDemo(true);
+    setError(null);
+  };
+
   const process = async () => {
     if (!file) return;
 
     if (tier === 'premiere' && !isSubscribed) {
       openPaywallModal();
+      return;
+    }
+
+    // Handle interactive sample demo fallback gracefully
+    if (isSampleDemo) {
+      setBusy(true);
+      setProgress(20);
+      setStatusMsg('Uploading sample audio recording…');
+      setError(null);
+
+      setTimeout(() => { setProgress(65); setStatusMsg('Running Pyannote speaker diarization & Whisper AI…'); }, 700);
+      setTimeout(() => {
+        setProgress(100);
+        setStatusMsg('Complete!');
+        setBusy(false);
+        const sampleTd = {
+          transcript: [
+            { start_time: 2.1, end_time: 12.4, start_time_formatted: "00:02", speaker: 0, text: "Welcome team to our Q3 product migration sync. Let's review feature scope and engineer assignments.", words: [ { word: "Welcome", confidence: 98 }, { word: "team", confidence: 96 }, { word: "Q3", confidence: 94 }, { word: "migration", confidence: 97 } ] },
+            { start_time: 14.2, end_time: 25.8, start_time_formatted: "00:14", speaker: 1, text: "The backend FastAPI services and Pyannote diarization pipeline are tested and ready for staging deployment.", words: [ { word: "backend", confidence: 99 }, { word: "FastAPI", confidence: 95 }, { word: "Pyannote", confidence: 92 } ] },
+            { start_time: 27.0, end_time: 38.5, start_time_formatted: "00:27", speaker: 0, text: "Awesome. Alice will finalize the UI sprint board by Friday, and Bob will deploy the staging build.", words: [ { word: "Alice", confidence: 99 }, { word: "finalize", confidence: 96 }, { word: "Bob", confidence: 98 } ] }
+          ],
+          metrics: { average: 96.2, min: 92, max: 99, low_confidence_percentage: 0 },
+          language: "en"
+        };
+        const sampleTxt = sampleTd.transcript.map(s => `[${s.start_time_formatted}] Speaker ${s.speaker}: ${s.text}`).join('\n');
+        onComplete({
+          transcript: sampleTxt,
+          transcriptData: sampleTd,
+          language: "en",
+          audioBlob: file,
+        });
+      }, 1400);
       return;
     }
 
@@ -409,6 +451,32 @@ export default function AudioUpload({ languages, onComplete }) {
           ><X size={12} /> Remove file</button>
         )}
       </div>
+
+      {!file && (
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+          <button
+            type="button"
+            onClick={loadSampleDemo}
+            style={{
+              background: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              color: '#0d9488',
+              borderRadius: 10,
+              padding: '8px 18px',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              boxShadow: '0 2px 6px rgba(13,148,136,0.1)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <Sparkles size={14} color="#0d9488" /> ⚡ Load Sample Demo Audio (Instant Test)
+          </button>
+        </div>
+      )}
 
       {busy && (
         <div style={{ marginTop: 16 }}>
