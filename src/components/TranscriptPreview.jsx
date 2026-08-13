@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Pause, Pencil, Check, X, ChevronDown } from 'lucide-react';
+import { Play, Pause, UserCheck, Check, X, ChevronDown, Tag } from 'lucide-react';
 import { Card } from './Card.jsx';
 
 // ── Confidence → colour helpers (mirrors backend/app.py) ────────────────
@@ -209,7 +209,7 @@ export default function TranscriptPreview({
         <div style={{ display: 'flex', gap: 8 }}>
           {!editing ? (
             <button onClick={() => setEditing(true)} style={btnGhost}>
-              <Pencil size={14} style={{ marginRight: 6 }} /> Edit
+              <UserCheck size={15} style={{ marginRight: 6 }} /> Speaker Labelling
             </button>
           ) : (
             <>
@@ -217,7 +217,7 @@ export default function TranscriptPreview({
                 <X size={14} style={{ marginRight: 6 }} /> Cancel
               </button>
               <button onClick={commitEdits} style={btnTeal}>
-                <Check size={14} style={{ marginRight: 6 }} /> Save edits
+                <Check size={14} style={{ marginRight: 6 }} /> Save Labels
               </button>
             </>
           )}
@@ -273,33 +273,45 @@ export default function TranscriptPreview({
         </div>
       )}
 
-      {/* Speaker rename bar (only visible in edit mode) */}
+      {/* Speaker Labelling panel (visible when Speaker Labelling mode is active) */}
       {editing && distinctSpeakers.length > 0 && (
         <div style={{
-          background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10,
-          padding: '12px 14px', marginBottom: 10, fontSize: 13,
+          background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12,
+          padding: '14px 16px', marginBottom: 16, fontSize: 13,
         }}>
           <div style={{
-            fontWeight: 700, marginBottom: 10, color: '#0f172a',
-            fontSize: 12.5, letterSpacing: '.06em', textTransform: 'uppercase',
-          }}>Rename speakers</div>
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10,
+          }}>
+            <div style={{
+              fontWeight: 800, color: '#0f172a',
+              fontSize: 12.5, letterSpacing: '.06em', textTransform: 'uppercase',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <UserCheck size={16} color="#0d9488" /> Speaker Labelling
+            </div>
+            <span style={{ fontSize: 12, color: '#64748b' }}>
+              Assign names to detected voice IDs
+            </span>
+          </div>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
             gap: 10,
           }}>
             {distinctSpeakers.map((sp) => (
               <label key={sp} className="app-rename-row" style={{
                 display: 'grid', gridTemplateColumns: 'max-content 1fr',
                 alignItems: 'center', gap: 10,
+                background: '#ffffff', border: '1px solid #e2e8f0',
+                padding: '8px 12px', borderRadius: 8,
               }}>
                 <span style={{
-                  fontSize: 12.5, color: '#64748b', whiteSpace: 'nowrap',
+                  fontSize: 12.5, fontWeight: 700, color: '#334155', whiteSpace: 'nowrap',
                   fontFamily: 'ui-monospace, SFMono-Regular, monospace',
                 }}>{speakerShortLabel(sp)}</span>
                 <input
                   value={speakerNames[sp] || ''}
-                  placeholder="e.g., Alice"
+                  placeholder="e.g., Alice Smith"
                   onChange={(e) => setSpeakerNames((s) => ({ ...s, [sp]: e.target.value }))}
                   style={{
                     minWidth: 0, width: '100%',
