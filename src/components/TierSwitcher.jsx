@@ -26,13 +26,13 @@ export default function TierSwitcher({
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: isPremium ? '#fef3c7' : '#e0e7ff',
-          border: `1px solid ${isPremium ? '#fde68a' : '#c7d2fe'}`,
+          background: isPremium ? '#fef3c7' : '#f0fdf4',
+          border: `1px solid ${isPremium ? '#fde68a' : '#bbf7d0'}`,
           borderRadius: 999, padding: '4px 12px',
           fontSize: 12.5, fontWeight: 700,
-          color: isPremium ? '#92400e' : '#3730a3',
+          color: isPremium ? '#92400e' : '#0d9488',
         }}>
-          {isPremium ? <Crown size={14} color="#d97706" /> : <Sparkles size={14} color="#4338ca" />}
+          {isPremium ? <Crown size={14} color="#d97706" /> : <Sparkles size={14} color="#0d9488" />}
           {isPremium ? 'Premium Tier (Restricted)' : 'Free Demo Tier'}
         </div>
         {activeLimitsText && (
@@ -53,7 +53,7 @@ export default function TierSwitcher({
             style={{
               padding: '6px 12px', borderRadius: 8, border: 'none',
               background: tier === 'free' ? '#ffffff' : 'transparent',
-              color: tier === 'free' ? '#3730a3' : '#64748b',
+              color: tier === 'free' ? '#0d9488' : '#64748b',
               fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
               boxShadow: tier === 'free' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
             }}
