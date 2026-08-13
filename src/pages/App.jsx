@@ -74,34 +74,43 @@ export default function App() {
     setTranscriptData(td);
     setAudioBlob(blob || null);
     if (language) setDetectedLanguage(language);
+    let parts = '';
     if (td?.transcript && Array.isArray(td.transcript)) {
       const speakers = new Set();
       td.transcript.forEach((seg) => {
         if (seg.speaker !== undefined) speakers.add(speakerLabel(seg.speaker));
       });
-      if (speakers.size) setParticipants([...speakers].sort().join(', '));
+      if (speakers.size) parts = [...speakers].sort().join(', ');
     }
+    if (!parts) parts = 'Speaker 0, Speaker 1';
+    setParticipants(parts);
     afterTranscriptReady();
+    doSummarize(t, parts);
   };
 
   const handleTranscriptFromText = async (text) => {
     setTranscript(text);
     setTranscriptData(null);
     setAudioBlob(null);
+    let parts = '';
     if (text?.trim()) {
       try {
         const detected = await extractParticipants(text);
-        if (detected?.length) setParticipants(detected.join(', '));
+        if (detected?.length) parts = detected.join(', ');
       } catch { /* non-fatal */ }
     }
+    if (!parts) parts = 'Speaker 0, Speaker 1';
+    setParticipants(parts);
   };
 
   const handleTextLoaded = ({ transcript: t, participants: p }) => {
     setTranscript(t);
     setTranscriptData(null);
     setAudioBlob(null);
-    if (p?.length) setParticipants(p.join(', '));
+    const parts = p?.length ? p.join(', ') : 'Speaker 0, Speaker 1';
+    setParticipants(parts);
     afterTranscriptReady();
+    doSummarize(t, parts);
   };
 
   const handleTranscriptEdit = (flatText, updatedData) => {
@@ -118,18 +127,20 @@ export default function App() {
 
   const canSubmit = !!transcript.trim();
 
-  const doSummarize = async () => {
-    if (!canSubmit) return;
-    const effectiveParticipants = participants.trim() || 'Speaker 0, Speaker 1';
+  const doSummarize = async (overrideTranscript, overrideParticipants) => {
+    const txt = (overrideTranscript !== undefined ? overrideTranscript : transcript).trim();
+    const parts = (overrideParticipants !== undefined ? overrideParticipants : participants).trim() || 'Speaker 0, Speaker 1';
+    if (!txt) return;
+
     setSummaryBusy(true);
     setSummaryError(null);
     setSummary(null);
     setSummaryProgress(0);
-    setSummaryStatus('Submitting…');
+    setSummaryStatus('Generating summary…');
     try {
       const { job_id } = await summarize({
-        transcript,
-        participants: effectiveParticipants,
+        transcript: txt,
+        participants: parts,
         language: detectedLanguage || null,
         isLongRecording,
         additionalContext,
