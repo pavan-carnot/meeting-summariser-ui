@@ -116,10 +116,11 @@ export default function App() {
     }
   };
 
-  const canSubmit = !!transcript.trim() && !!participants.trim();
+  const canSubmit = !!transcript.trim();
 
   const doSummarize = async () => {
     if (!canSubmit) return;
+    const effectiveParticipants = participants.trim() || 'Speaker 0, Speaker 1';
     setSummaryBusy(true);
     setSummaryError(null);
     setSummary(null);
@@ -128,7 +129,7 @@ export default function App() {
     try {
       const { job_id } = await summarize({
         transcript,
-        participants,
+        participants: effectiveParticipants,
         language: detectedLanguage || null,
         isLongRecording,
         additionalContext,
