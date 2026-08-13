@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DemoModal from '../components/DemoModal.jsx';
 
 // ─── Word-by-word reveal (ported from profile-website hero) ───────────────────
 // Tuned for landing-page speed: CTA needs to appear in <1.5s.
@@ -373,6 +374,7 @@ export default function Landing() {
   const revealMap = useRef({});
   const [ctaHover, setCtaHover] = useState(false);
   const [bigCtaHover, setBigCtaHover] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   const register = (id) => (el) => {
     if (el) revealMap.current[id] = el;
@@ -464,7 +466,20 @@ export default function Landing() {
                 <span className="lp-nav-tagline" style={{ fontSize: 12, color: '#94a3b8' }}>by Carnot Research Pvt Ltd</span>
               </div>
             </div>
-            <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 34 }}>
+            <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+              <button
+                type="button"
+                onClick={() => setShowDemoModal(true)}
+                style={{
+                  background: '#f0fdf4', border: '1px solid #bbf7d0',
+                  color: '#0d9488', borderRadius: 999, padding: '7px 16px',
+                  fontSize: 13.5, fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <span>▶</span> Watch Demo
+              </button>
               <a href="#features" className="lp-anchor" style={{ fontSize: 15, fontWeight: 500, textDecoration: 'none' }}>Features</a>
               <a href="#how" className="lp-anchor" style={{ fontSize: 15, fontWeight: 500, textDecoration: 'none' }}>How it works</a>
               <a href="#security" className="lp-anchor" style={{ fontSize: 15, fontWeight: 500, textDecoration: 'none' }}>Security</a>
@@ -529,7 +544,7 @@ export default function Landing() {
                 <div className="lp-hero-ctas" style={{
                   opacity: 0,
                   animation: `wordReveal .55s cubic-bezier(0.22,1,0.36,1) ${ctaDelay.toFixed(2)}s both`,
-                  display: 'flex', gap: 16, alignItems: 'center',
+                  display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap',
                 }}>
                   <a
                     href="/app"
@@ -545,7 +560,18 @@ export default function Landing() {
                       transition: 'transform .25s ease, box-shadow .25s ease',
                     }}
                   >Explore Product →</a>
-                  <a href="#how" style={{ fontSize: 16, fontWeight: 600, padding: '16px 10px', color: '#0f172a', textDecoration: 'none' }}>See how it works</a>
+                  <button
+                    type="button"
+                    onClick={() => setShowDemoModal(true)}
+                    style={{
+                      background: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a',
+                      borderRadius: 14, padding: '16px 24px', fontSize: 15.5, fontWeight: 700,
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.05)', transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <span style={{ color: '#0d9488' }}>▶</span> Watch Product Demo
+                  </button>
                 </div>
               </div>
 
@@ -674,6 +700,12 @@ export default function Landing() {
         </div>
 
       </div>
+
+      {/* Product Demo Modal */}
+      <DemoModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+      />
     </div>
   );
 }
