@@ -85,7 +85,6 @@ export default function App() {
     if (!parts) parts = 'Speaker 0, Speaker 1';
     setParticipants(parts);
     afterTranscriptReady();
-    doSummarize(t, parts);
   };
 
   const handleTranscriptFromText = async (text) => {
@@ -110,7 +109,6 @@ export default function App() {
     const parts = p?.length ? p.join(', ') : 'Speaker 0, Speaker 1';
     setParticipants(parts);
     afterTranscriptReady();
-    doSummarize(t, parts);
   };
 
   const handleTranscriptEdit = (flatText, updatedData) => {
@@ -128,8 +126,10 @@ export default function App() {
   const canSubmit = !!transcript.trim();
 
   const doSummarize = async (overrideTranscript, overrideParticipants) => {
-    const txt = (overrideTranscript !== undefined ? overrideTranscript : transcript).trim();
-    const parts = (overrideParticipants !== undefined ? overrideParticipants : participants).trim() || 'Speaker 0, Speaker 1';
+    const rawTxt = typeof overrideTranscript === 'string' ? overrideTranscript : transcript;
+    const rawParts = typeof overrideParticipants === 'string' ? overrideParticipants : participants;
+    const txt = (rawTxt || '').trim();
+    const parts = (rawParts || '').trim() || 'Speaker 0, Speaker 1';
     if (!txt) return;
 
     setSummaryBusy(true);

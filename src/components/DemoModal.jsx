@@ -69,8 +69,6 @@ export default function DemoModal({ isOpen, onClose }) {
           <video
             src="/demo.mp4"
             autoPlay
-            loop
-            muted
             controls
             playsInline
             style={{

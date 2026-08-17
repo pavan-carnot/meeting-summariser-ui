@@ -1,18 +1,35 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Pause, UserCheck, Check, X, ChevronDown, Tag } from 'lucide-react';
+import { Play, Pause, UserCheck, Check, X, ChevronDown, Tag, Edit3, FileText } from 'lucide-react';
 import { Card } from './Card.jsx';
 
 // ── Confidence → colour helpers (mirrors backend/app.py) ────────────────
-function confColor(c) {
-  if (c == null) return { fg: '#94a3b8', bg: 'transparent' };
-  if (c >= 90) return { fg: '#166534', bg: 'rgba(76,175,80,0.14)' };
-  if (c >= 70) return { fg: '#9a5b00', bg: 'rgba(255,152,0,0.16)' };
-  return { fg: '#b91c1c', bg: 'rgba(244,67,54,0.16)' };
+function normConf(c) {
+  if (c == null || Number.isNaN(c)) return null;
+  const num = Number(c);
+  // If probability is 0.0 – 1.0 (e.g. 0.95 for 95%), convert to percentage 0–100
+  return num <= 1.0 && num > 0 ? num * 100 : num;
 }
+
+function confColor(c, segConf, showHighlights = false) {
+  if (!showHighlights) return { fg: '#2a2823', bg: 'transparent' };
+  const score = normConf(typeof c === 'object' ? c?.confidence : c);
+  if (score == null) return { fg: '#2a2823', bg: 'transparent' };
+
+  // Only highlight explicit low confidence (< 35%)
+  if (score < 35) {
+    return { fg: '#991b1b', bg: 'rgba(254,226,226,0.75)', borderBottom: '2px dotted #ef4444', padding: '0 3px', borderRadius: 3 };
+  }
+  if (score < 55) {
+    return { fg: '#713f12', bg: 'rgba(254,240,138,0.45)', padding: '0 3px', borderRadius: 3 };
+  }
+  return { fg: '#2a2823', bg: 'transparent' };
+}
+
 function confDot(c) {
-  if (c == null) return '⚫';
-  if (c >= 90) return '🟢';
-  if (c >= 70) return '🟡';
+  const score = normConf(c);
+  if (score == null) return '⚫';
+  if (score >= 80) return '🟢';
+  if (score >= 60) return '🟡';
   return '🔴';
 }
 function fmtTime(secs) {
@@ -78,12 +95,22 @@ export default function TranscriptPreview({
   const [segments, setSegments] = useState(() => transcriptData?.transcript || []);
   const rawSegments = transcriptData?.raw_transcription || [];
   const metrics = transcriptData?.confidence_metrics;
-  const [editing, setEditing] = useState(false);
+  const [editMode, setEditMode] = useState(null); // null | 'speakers' | 'transcript'
+  const [showWordHighlights, setShowWordHighlights] = useState(false);
   const [audioTime, setAudioTime] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef(null);
   const listRef = useRef(null);
+  const targetEndTimeRef = useRef(null);
+
+  // Inline speaker edit state (allows direct segment-level renaming across all occurrences)
+  const [editingSpeakerForKey, setEditingSpeakerForKey] = useState(null);
+  const [inlineSpeakerValue, setInlineSpeakerValue] = useState('');
+
+  // Inline segment text edit state (allows direct segment text modifications)
+  const [editingSegIdx, setEditingSegIdx] = useState(null);
+  const [editingSegValue, setEditingSegValue] = useState('');
 
   // Reset local state when backend hands us a new transcript
   useEffect(() => {
@@ -98,26 +125,40 @@ export default function TranscriptPreview({
     return [...s];
   }, [segments]);
 
-  // Format a raw diarization key like "SPEAKER_00" as "Speaker 00" so the
-  // rendered label doesn't double up ("Speaker SPEAKER_00"). If the user has
-  // typed a friendly name for this speaker, prefer that verbatim.
+  // Format a raw diarization key like "SPEAKER_00" as "Speaker 00". Prefer user rename if set.
   const displaySpeaker = (raw) => {
-    if (speakerNames[String(raw)]) return speakerNames[String(raw)];
-    const s = String(raw ?? '?');
-    const m = s.match(/^speaker[_\s-]*(.+)$/i);
-    return m ? `Speaker ${m[1]}` : `Speaker ${s}`;
+    const rawStr = String(raw ?? '?').trim();
+    if (speakerNames[rawStr]) return speakerNames[rawStr];
+    const m = rawStr.match(/^speaker[_\s-]*(\d+)$/i);
+    if (m) return `Speaker ${m[1]}`;
+    if (/^speaker[_\s-]/i.test(rawStr)) {
+      const rest = rawStr.replace(/^speaker[_\s-]*/i, '');
+      return rest ? `Speaker ${rest}` : rawStr;
+    }
+    return rawStr;
   };
   const speakerShortLabel = (raw) => {
-    const s = String(raw ?? '?');
-    const m = s.match(/^speaker[_\s-]*(.+)$/i);
-    return m ? `Speaker ${m[1]}` : `Speaker ${s}`;
+    const rawStr = String(raw ?? '?').trim();
+    const m = rawStr.match(/^speaker[_\s-]*(\d+)$/i);
+    if (m) return `Speaker ${m[1]}`;
+    if (/^speaker[_\s-]/i.test(rawStr)) {
+      const rest = rawStr.replace(/^speaker[_\s-]*/i, '');
+      return rest ? `Speaker ${rest}` : rawStr;
+    }
+    return rawStr;
   };
 
   // ── Audio playback ─────────────────────────────────────────
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
-    const onTime = () => setAudioTime(el.currentTime);
+    const onTime = () => {
+      setAudioTime(el.currentTime);
+      if (targetEndTimeRef.current != null && el.currentTime >= targetEndTimeRef.current) {
+        el.pause();
+        targetEndTimeRef.current = null;
+      }
+    };
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
     const onLoaded = () => setDuration(el.duration || 0);
@@ -133,17 +174,27 @@ export default function TranscriptPreview({
     };
   }, [audioSrc]);
 
+  const playSegment = (start, end) => {
+    const el = audioRef.current;
+    if (!el || start == null) return;
+    targetEndTimeRef.current = end != null ? end + 0.2 : null;
+    el.currentTime = start;
+    if (el.paused) el.play().catch(() => { });
+  };
+
   const seekTo = (secs) => {
     const el = audioRef.current;
     if (!el || secs == null) return;
+    targetEndTimeRef.current = null;
     el.currentTime = secs;
-    if (el.paused) el.play().catch(() => {});
+    if (el.paused) el.play().catch(() => { });
   };
 
   const togglePlay = () => {
     const el = audioRef.current;
     if (!el) return;
-    if (el.paused) el.play().catch(() => {});
+    targetEndTimeRef.current = null;
+    if (el.paused) el.play().catch(() => { });
     else el.pause();
   };
 
@@ -159,10 +210,10 @@ export default function TranscriptPreview({
 
   // Auto-scroll to active segment
   useEffect(() => {
-    if (activeIdx < 0 || !listRef.current || editing) return;
+    if (activeIdx < 0 || !listRef.current || editMode) return;
     const el = listRef.current.querySelector(`[data-seg="${activeIdx}"]`);
     el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [activeIdx, editing]);
+  }, [activeIdx, editMode]);
 
   // ── Editing handlers ───────────────────────────────────────
   const editSegText = (idx, text) => {
@@ -170,11 +221,23 @@ export default function TranscriptPreview({
     setSegments(next);
   };
 
+  const startEditingSegText = (idx, currentText) => {
+    setEditingSegIdx(idx);
+    setEditingSegValue(currentText || '');
+  };
+
+  const saveInlineSegText = (idx) => {
+    const updatedSegments = segments.map((s, i) => (i === idx ? { ...s, text: editingSegValue } : s));
+    setSegments(updatedSegments);
+    setEditingSegIdx(null);
+
+    onTranscriptChange?.(rebuildFlatTranscript(updatedSegments), {
+      ...transcriptData,
+      transcript: updatedSegments,
+    });
+  };
+
   const commitEdits = () => {
-    // Bake speaker renames into each segment's `speaker` field so downstream
-    // consumers (summary, follow-up emails, flat transcript) see the friendly
-    // name instead of the raw diarization key. Strip a leading "Speaker "
-    // prefix if the user typed one so we don't produce "Speaker Speaker Alice".
     const named = segments.map((s) => {
       const rename = speakerNames[String(s.speaker ?? '?')];
       if (!rename) return s;
@@ -186,16 +249,50 @@ export default function TranscriptPreview({
       ...transcriptData,
       transcript: named,
     });
-    // Clear the local rename map — the names are now part of the segments,
-    // so the "Rename speakers" inputs should start fresh on next edit.
     setSpeakerNames({});
-    setEditing(false);
+    setEditMode(null);
   };
 
   const cancelEdits = () => {
     setSegments(transcriptData?.transcript || []);
     setSpeakerNames({});
-    setEditing(false);
+    setEditMode(null);
+    setEditingSegIdx(null);
+  };
+
+  // ── Inline segment-level speaker editing (updates ALL occurrences globally) ──
+  const startEditingSpeaker = (rawSpeakerKey, currentDisplay) => {
+    setEditingSpeakerForKey(String(rawSpeakerKey ?? '?'));
+    const cleanName = currentDisplay.replace(/^Speaker\s*/i, '').trim();
+    setInlineSpeakerValue(cleanName);
+  };
+
+  const saveInlineSpeaker = (rawSpeakerKey, newName) => {
+    const cleaned = newName.trim();
+    const keyToMatch = String(rawSpeakerKey ?? '?');
+
+    if (!cleaned) {
+      setEditingSpeakerForKey(null);
+      return;
+    }
+
+    const updatedSegments = segments.map((s) => {
+      const sKey = String(s.speaker ?? '?');
+      if (sKey === keyToMatch || displaySpeaker(s.speaker) === displaySpeaker(rawSpeakerKey)) {
+        return { ...s, speaker: cleaned };
+      }
+      return s;
+    });
+
+    setSegments(updatedSegments);
+    setSpeakerNames((prev) => ({ ...prev, [keyToMatch]: cleaned }));
+    setEditingSpeakerForKey(null);
+
+    // Synchronize rebuilt transcript and updated segments with parent App instantly
+    onTranscriptChange?.(rebuildFlatTranscript(updatedSegments), {
+      ...transcriptData,
+      transcript: updatedSegments,
+    });
   };
 
   const currentList = view === 'diarized' ? segments : rawSegments;
@@ -207,38 +304,64 @@ export default function TranscriptPreview({
           Colours show Whisper confidence — hover any word for its exact score.
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          {!editing ? (
-            <button onClick={() => setEditing(true)} style={btnGhost}>
-              <UserCheck size={15} style={{ marginRight: 6 }} /> Speaker Labelling
-            </button>
+          {!editMode ? (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setEditMode('speakers')}
+                style={btnGhost}
+                title="Assign friendly names to detected voice IDs"
+              >
+                <UserCheck size={15} style={{ marginRight: 6 }} /> Label Speakers
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditMode('transcript')}
+                style={btnGhost}
+                title="Edit and correct transcript text content"
+              >
+                <FileText size={15} style={{ marginRight: 6 }} /> Edit Transcript
+              </button>
+            </div>
           ) : (
-            <>
-              <button onClick={cancelEdits} style={btnGhost}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: '#0f766e', marginRight: 4 }}>
+                {editMode === 'speakers' ? '🏷️ Speaker Labelling Mode' : '📝 Transcript Edit Mode'}
+              </span>
+              <button type="button" onClick={cancelEdits} style={btnGhost}>
                 <X size={14} style={{ marginRight: 6 }} /> Cancel
               </button>
-              <button onClick={commitEdits} style={btnTeal}>
-                <Check size={14} style={{ marginRight: 6 }} /> Save Labels
+              <button type="button" onClick={commitEdits} style={btnTeal}>
+                <Check size={14} style={{ marginRight: 6 }} /> {editMode === 'speakers' ? 'Save Speaker Labels' : 'Save Transcript Edits'}
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>
 
       {/* Legend + metrics */}
-      <div className="app-transcript-legend" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 12.5, color: '#64748b', marginBottom: 10 }}>
-        <span>🟢 High (≥90%)</span>
-        <span>🟡 Medium (70–89%)</span>
-        <span>🔴 Low (&lt;70%)</span>
-        <span style={{ color: '#94a3b8', fontStyle: 'italic', marginLeft: 'auto' }}>💡 Hover a word to see its confidence</span>
+      <div className="app-transcript-legend" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14, fontSize: 12.5, color: '#64748b', marginBottom: 10 }}>
+        <span>🟢 High (≥85%) — Clean Text</span>
+        <span>🟡 Medium (65–84%)</span>
+        <span style={{ color: '#991b1b', fontWeight: 600 }}>🔴 Low (&lt;50%) — Review & Edit</span>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 'auto', cursor: 'pointer', userSelect: 'none', color: '#0f766e', fontWeight: 600 }}>
+          <input
+            type="checkbox"
+            checked={showWordHighlights}
+            onChange={(e) => setShowWordHighlights(e.target.checked)}
+            style={{ accentColor: '#0d9488', cursor: 'pointer' }}
+          />
+          Word Highlights
+        </label>
       </div>
       {metrics && metrics.average != null && (
         <div style={{
           display: 'flex', gap: 20, background: '#f8fafc', border: '1px solid #e2e8f0',
           borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#334155', marginBottom: 12,
         }}>
-          <span>Avg: <strong style={{ color: confColor(metrics.average).fg }}>{metrics.average}%</strong></span>
-          <span>Min: <strong>{metrics.min}%</strong></span>
-          <span>Max: <strong>{metrics.max}%</strong></span>
+          <span>Avg: <strong style={{ color: confColor(metrics.average, 100, showWordHighlights).fg }}>{Math.round(normConf(metrics.average) || 0)}%</strong></span>
+          <span>Min: <strong>{Math.round(normConf(metrics.min) || 0)}%</strong></span>
+          <span>Max: <strong>{Math.round(normConf(metrics.max) || 0)}%</strong></span>
           {metrics.low_confidence_percentage != null && (
             <span>Low-conf: <strong>{metrics.low_confidence_percentage}%</strong></span>
           )}
@@ -266,7 +389,13 @@ export default function TranscriptPreview({
             max={duration || 0}
             step="0.1"
             value={audioTime}
-            onChange={(e) => { const el = audioRef.current; if (el) el.currentTime = parseFloat(e.target.value); }}
+            onChange={(e) => {
+              const el = audioRef.current;
+              if (el) {
+                targetEndTimeRef.current = null;
+                el.currentTime = parseFloat(e.target.value);
+              }
+            }}
             style={{ flex: 1, accentColor: '#0d9488' }}
           />
           <audio ref={audioRef} src={audioSrc} preload="metadata" style={{ display: 'none' }} />
@@ -274,7 +403,7 @@ export default function TranscriptPreview({
       )}
 
       {/* Speaker Labelling panel (visible when Speaker Labelling mode is active) */}
-      {editing && distinctSpeakers.length > 0 && (
+      {editMode === 'speakers' && distinctSpeakers.length > 0 && (
         <div style={{
           background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12,
           padding: '14px 16px', marginBottom: 16, fontSize: 13,
@@ -369,13 +498,16 @@ export default function TranscriptPreview({
           const words = segWords(seg);
           const isActive = !isRaw && idx === activeIdx;
           const start = segStartSecs(seg);
+          const end = segEndSecs(seg);
+          const rawSpeakerKey = String(seg.speaker ?? '?');
           const speakerDisplay = isRaw ? '' : displaySpeaker(seg.speaker);
+          const isInlineEditingThisSpeaker = editingSpeakerForKey === rawSpeakerKey;
 
           return (
             <div
               key={idx}
               data-seg={idx}
-              onClick={() => start != null && seekTo(start)}
+              onClick={() => start != null && playSegment(start, end)}
               style={{
                 padding: '8px 10px', borderRadius: 8, marginBottom: 4,
                 cursor: start != null ? 'pointer' : 'default',
@@ -384,20 +516,107 @@ export default function TranscriptPreview({
                 transition: 'background .15s ease',
               }}
             >
-              <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span>{dot}</span>
                 <span style={{ color: '#94a3b8', fontSize: 12, fontFamily: 'ui-monospace, monospace' }}>[{ts}]</span>
                 {!isRaw && (
-                  <strong style={{ color: '#0f766e', fontSize: 13, marginRight: 4 }}>
-                    {speakerDisplay}:
-                  </strong>
+                  <div
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginRight: 6 }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {isInlineEditingThisSpeaker ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <input
+                          type="text"
+                          value={inlineSpeakerValue}
+                          onChange={(e) => setInlineSpeakerValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveInlineSpeaker(rawSpeakerKey, inlineSpeakerValue);
+                            if (e.key === 'Escape') setEditingSpeakerForKey(null);
+                          }}
+                          placeholder="Name (e.g. Alice)"
+                          autoFocus
+                          style={{
+                            padding: '2px 8px',
+                            fontSize: 12.5,
+                            fontWeight: 700,
+                            borderRadius: 6,
+                            border: '1px solid #0d9488',
+                            outline: 'none',
+                            color: '#0f766e',
+                            background: '#ffffff',
+                            width: 140,
+                            boxShadow: '0 0 0 2px rgba(13,148,136,0.2)',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => saveInlineSpeaker(rawSpeakerKey, inlineSpeakerValue)}
+                          title="Save & update all occurrences"
+                          style={{
+                            background: '#0d9488',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: 5,
+                            padding: '3px 7px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Check size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingSpeakerForKey(null)}
+                          title="Cancel"
+                          style={{
+                            background: '#cbd5e1',
+                            color: '#334155',
+                            border: 'none',
+                            borderRadius: 5,
+                            padding: '3px 7px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <X size={13} />
+                        </button>
+                      </span>
+                    ) : (
+                      <span
+                        className="speaker-badge-tag"
+                        onClick={() => startEditingSpeaker(rawSpeakerKey, speakerDisplay)}
+                        title="Click to rename this speaker across all segments"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          cursor: 'pointer',
+                          padding: '2px 8px',
+                          borderRadius: 6,
+                          background: 'rgba(13,148,136,0.09)',
+                          border: '1px solid rgba(13,148,136,0.25)',
+                          transition: 'all 0.15s ease',
+                          userSelect: 'none',
+                        }}
+                      >
+                        <strong style={{ color: '#0f766e', fontSize: 13 }}>
+                          {speakerDisplay}:
+                        </strong>
+                        <Edit3 size={11} color="#0d9488" style={{ opacity: 0.75 }} />
+                      </span>
+                    )}
+                  </div>
                 )}
 
-                {editing && !isRaw ? (
+                {editMode === 'transcript' && !isRaw ? (
                   <textarea
                     value={seg.text || ''}
                     onChange={(e) => editSegText(idx, e.target.value)}
                     onClick={(e) => e.stopPropagation()}
+                    placeholder="Edit segment text..."
                     style={{
                       flex: 1, minWidth: 240, minHeight: 46, padding: 8, borderRadius: 6,
                       border: '1px solid #cbd5e1', background: '#ffffff', color: '#111',
@@ -405,29 +624,83 @@ export default function TranscriptPreview({
                       resize: 'vertical', outline: 'none',
                     }}
                   />
-                ) : words.length > 0 ? (
-                  <span style={{ flex: 1, color: '#2a2823' }}>
-                    {words.map((w, wi) => {
-                      const c = w.confidence;
-                      const { fg, bg } = confColor(c);
-                      return (
-                        <span
-                          key={wi}
-                          title={c != null ? `${c.toFixed ? c.toFixed(1) : c}%` : ''}
-                          style={{
-                            color: fg, background: bg, padding: '0 2px',
-                            borderRadius: 3, marginRight: 2,
-                          }}
-                        >{w.word}</span>
-                      );
-                    })}
-                  </span>
+                ) : editingSegIdx === idx ? (
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }} onClick={(e) => e.stopPropagation()}>
+                    <textarea
+                      value={editingSegValue}
+                      onChange={(e) => setEditingSegValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                          saveInlineSegText(idx);
+                        }
+                        if (e.key === 'Escape') setEditingSegIdx(null);
+                      }}
+                      autoFocus
+                      rows={2}
+                      style={{
+                        width: '100%', padding: 8, borderRadius: 6,
+                        border: '1px solid #0d9488', background: '#ffffff', color: '#111',
+                        fontFamily: "'Inter', sans-serif", fontSize: 13.5, lineHeight: 1.5,
+                        outline: 'none', boxShadow: '0 0 0 2px rgba(13,148,136,0.2)',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                      <button
+                        type="button"
+                        onClick={() => setEditingSegIdx(null)}
+                        style={{
+                          padding: '3px 9px', fontSize: 12, borderRadius: 5, border: 'none',
+                          background: '#cbd5e1', color: '#334155', cursor: 'pointer',
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => saveInlineSegText(idx)}
+                        style={{
+                          padding: '3px 9px', fontSize: 12, borderRadius: 5, border: 'none',
+                          background: '#0d9488', color: '#ffffff', fontWeight: 600, cursor: 'pointer',
+                        }}
+                      >
+                        Save Segment Text
+                      </button>
+                    </div>
+                  </div>
                 ) : (
-                  <span style={{ flex: 1, color: confColor(seg_conf).fg || '#2a2823' }}>{seg.text}</span>
+                  <span
+                    style={{ flex: 1, color: '#2a2823', cursor: 'text' }}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      startEditingSegText(idx, seg.text);
+                    }}
+                    title="Double-click to edit segment text"
+                  >
+                    {words.length > 0 ? (
+                      words.map((w, wi) => {
+                        const score = normConf(w.confidence);
+                        const { fg, bg, padding, borderRadius, borderBottom } = confColor(w, seg_conf, showWordHighlights);
+                        return (
+                          <span
+                            key={wi}
+                            title={score != null ? `${Math.round(score)}% confidence${score < 50 ? ' (Low — double click line to edit)' : ''}` : ''}
+                            style={{
+                              color: fg, background: bg, padding: padding || '0 2px',
+                              borderRadius: borderRadius || 3, borderBottom: borderBottom || 'none',
+                              marginRight: 2, display: 'inline-block',
+                            }}
+                          >{w.word}</span>
+                        );
+                      })
+                    ) : (
+                      <span style={{ color: confColor(seg.text, seg_conf, showWordHighlights).fg || '#2a2823' }}>{seg.text}</span>
+                    )}
+                  </span>
                 )}
 
                 {seg_conf != null && (
-                  <span style={{ color: '#94a3b8', fontSize: 11 }}>({Math.round(seg_conf)}%)</span>
+                  <span style={{ color: '#94a3b8', fontSize: 11 }}>({Math.round(normConf(seg_conf) || 0)}%)</span>
                 )}
               </div>
             </div>
@@ -435,12 +708,12 @@ export default function TranscriptPreview({
         })}
       </div>
 
-      {editing && (
+      {editMode && (
         <div style={{
           marginTop: 10, padding: '8px 12px', background: '#f0fdf4', border: '1px solid #bbf7d0',
           borderRadius: 8, fontSize: 12.5, color: '#166534', display: 'flex', alignItems: 'center', gap: 6,
         }}>
-          <ChevronDown size={14} /> Editing mode — click <strong>Save edits</strong> above to apply changes to the summary input.
+          <ChevronDown size={14} /> {editMode === 'speakers' ? 'Speaker Labelling mode' : 'Transcript Edit mode'} — click <strong>Save</strong> above to apply changes to the summary generator.
         </div>
       )}
     </Card>
