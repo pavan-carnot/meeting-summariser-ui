@@ -25,7 +25,7 @@ const RESULT_VIEWS = new Set(['audio-player', 'transcript', 'confidence', 'repor
 function speakerLabel(raw) {
   const s = String(raw ?? '?').trim();
   const m = s.match(/^speaker[_\s-]*(.+)$/i);
-  return m ? `Speaker ${m[1]}` : s;
+  return m ? `Speaker ${/^\d+$/.test(m[1]) ? Number(m[1]) : m[1]}` : s;
 }
 
 export default function App() {
@@ -80,26 +80,44 @@ export default function App() {
       td.transcript.forEach((seg) => {
         if (seg.speaker !== undefined) speakers.add(speakerLabel(seg.speaker));
       });
-      if (speakers.size) parts = [...speakers].sort().join(', ');
+      if (speakers.size) parts = [...speakers].join(', ');
     }
     if (!parts) parts = 'Speaker 0, Speaker 1';
     setParticipants(parts);
     afterTranscriptReady();
   };
 
-  const handleTranscriptFromText = async (text) => {
+  const participantTimer = useRef(null);
+  const participantRequest = useRef(0);
+  useEffect(() => () => {
+    clearTimeout(participantTimer.current);
+    participantRequest.current += 1;
+  }, []);
+
+  const handleTranscriptFromText = (text) => {
+    clearTimeout(participantTimer.current);
+    const request = ++participantRequest.current;
     setTranscript(text);
     setTranscriptData(null);
     setAudioBlob(null);
-    let parts = '';
-    if (text?.trim()) {
+    setDetectedLanguage(null);
+    setIsLongRecording(false);
+    // Labelled transcripts need no network call, including Hindi names.
+    const names = [...new Set(text.split('\n').map((line) => {
+      const match = line.match(/^\s*(?:\[[\d:.]+\]\s*)?(?:[✓~?]\s*)?([^:()\n]+?)(?:\s*\([^)]*\))?\s*:/u);
+      const name = match?.[1]?.trim();
+      return name && name.length <= 60 && /\p{L}/u.test(name) ? speakerLabel(name) : null;
+    }).filter(Boolean))];
+    setParticipants(names.join(', '));
+    if (names.length || !text.trim()) return;
+    participantTimer.current = setTimeout(async () => {
       try {
         const detected = await extractParticipants(text);
-        if (detected?.length) parts = detected.join(', ');
+        if (request === participantRequest.current) {
+          setParticipants(detected?.length ? detected.join(', ') : 'Speaker 0');
+        }
       } catch { /* non-fatal */ }
-    }
-    if (!parts) parts = 'Speaker 0, Speaker 1';
-    setParticipants(parts);
+    }, 500);
   };
 
   const handleTextLoaded = ({ transcript: t, participants: p }) => {
@@ -119,7 +137,7 @@ export default function App() {
       updatedData.transcript.forEach((seg) => {
         if (seg.speaker !== undefined) speakers.add(speakerLabel(seg.speaker));
       });
-      if (speakers.size) setParticipants([...speakers].sort().join(', '));
+      if (speakers.size) setParticipants([...speakers].join(', '));
     }
   };
 

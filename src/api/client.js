@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // In dev, we leave baseURL empty so the Vite proxy (/api → backend) handles it.
 // In production, VITE_API_URL from .env is the direct backend origin.
-const BASE_URL = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '');
+const BASE_URL = import.meta.env.VITE_API_URL || '';
 
 console.log('[api] baseURL:', BASE_URL || '(dev proxy /api → backend)',
             '| VITE_API_URL:', import.meta.env.VITE_API_URL,
@@ -17,6 +17,9 @@ const api = axios.create({
 // ── Request / response tracing ─────────────────────────────
 api.interceptors.request.use((cfg) => {
   const method = (cfg.method || 'GET').toUpperCase();
+  if (cfg.data instanceof FormData) {
+    delete cfg.headers['Content-Type'];
+  }
   console.log(`[api] → ${method} ${cfg.baseURL || ''}${cfg.url}`);
   cfg.metadata = { start: performance.now() };
   return cfg;
@@ -82,7 +85,6 @@ export async function uploadAudio(file, { language, isLongRecording = false, tie
   fd.append('tier', tier);
   fd.append('is_subscribed', String(isSubscribed));
   const { data } = await api.post('/api/upload-audio', fd, {
-    headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 600000,
   });
   return data;
@@ -91,14 +93,12 @@ export async function uploadAudio(file, { language, isLongRecording = false, tie
 export async function uploadText(file) {
   const fd = new FormData();
   fd.append('file', file);
-  const { data } = await api.post('/api/upload-text', fd, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const { data } = await api.post('/api/upload-text', fd);
   return data;
 }
 
 export async function extractParticipants(transcript) {
-  const { data } = await api.post('/api/extract-participants', { transcript });
+  const { data } = await api.post('/api/extract-participants', { transcript }, { timeout: 5000 });
   return data;
 }
 

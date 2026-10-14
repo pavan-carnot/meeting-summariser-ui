@@ -42,7 +42,7 @@ function downloadBlob(filename, content, mime = 'text/plain') {
 export default function SummaryView({ summary, transcript }) {
   const [tab, setTab] = useState('summary');
   const [expandedAction, setExpandedAction] = useState(null);
-  const [expandedSpeaker, setExpandedSpeaker] = useState(null);
+  const [expandedSpeaker, setExpandedSpeaker] = useState(0);
 
   if (!summary) return null;
 

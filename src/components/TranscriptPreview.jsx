@@ -1,37 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Play, Pause, UserCheck, Check, X, ChevronDown, Tag, Edit3, FileText } from 'lucide-react';
 import { Card } from './Card.jsx';
-
-// ── Confidence → colour helpers (mirrors backend/app.py) ────────────────
-function normConf(c) {
-  if (c == null || Number.isNaN(c)) return null;
-  const num = Number(c);
-  // If probability is 0.0 – 1.0 (e.g. 0.95 for 95%), convert to percentage 0–100
-  return num <= 1.0 && num > 0 ? num * 100 : num;
+function normConf(value) {
+  if (value == null || !Number.isFinite(Number(value))) return null;
+  const score = Number(value);
+  return score > 0 && score <= 1 ? score * 100 : score;
 }
 
-function confColor(c, segConf, showHighlights = false) {
-  if (!showHighlights) return { fg: '#2a2823', bg: 'transparent' };
-  const score = normConf(typeof c === 'object' ? c?.confidence : c);
-  if (score == null) return { fg: '#2a2823', bg: 'transparent' };
-
-  // Only highlight explicit low confidence (< 35%)
-  if (score < 35) {
-    return { fg: '#991b1b', bg: 'rgba(254,226,226,0.75)', borderBottom: '2px dotted #ef4444', padding: '0 3px', borderRadius: 3 };
-  }
-  if (score < 55) {
-    return { fg: '#713f12', bg: 'rgba(254,240,138,0.45)', padding: '0 3px', borderRadius: 3 };
-  }
-  return { fg: '#2a2823', bg: 'transparent' };
-}
-
-function confDot(c) {
-  const score = normConf(c);
+function confDot(score) {
   if (score == null) return '⚫';
   if (score >= 80) return '🟢';
   if (score >= 60) return '🟡';
   return '🔴';
 }
+
+
 function fmtTime(secs) {
   if (secs == null || Number.isNaN(secs)) return '--:--';
   const m = Math.floor(secs / 60);
@@ -96,7 +79,6 @@ export default function TranscriptPreview({
   const rawSegments = transcriptData?.raw_transcription || [];
   const metrics = transcriptData?.confidence_metrics;
   const [editMode, setEditMode] = useState(null); // null | 'speakers' | 'transcript'
-  const [showWordHighlights, setShowWordHighlights] = useState(false);
   const [audioTime, setAudioTime] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -130,7 +112,7 @@ export default function TranscriptPreview({
     const rawStr = String(raw ?? '?').trim();
     if (speakerNames[rawStr]) return speakerNames[rawStr];
     const m = rawStr.match(/^speaker[_\s-]*(\d+)$/i);
-    if (m) return `Speaker ${m[1]}`;
+    if (m) return `Speaker ${Number(m[1])}`;
     if (/^speaker[_\s-]/i.test(rawStr)) {
       const rest = rawStr.replace(/^speaker[_\s-]*/i, '');
       return rest ? `Speaker ${rest}` : rawStr;
@@ -140,7 +122,7 @@ export default function TranscriptPreview({
   const speakerShortLabel = (raw) => {
     const rawStr = String(raw ?? '?').trim();
     const m = rawStr.match(/^speaker[_\s-]*(\d+)$/i);
-    if (m) return `Speaker ${m[1]}`;
+    if (m) return `Speaker ${Number(m[1])}`;
     if (/^speaker[_\s-]/i.test(rawStr)) {
       const rest = rawStr.replace(/^speaker[_\s-]*/i, '');
       return rest ? `Speaker ${rest}` : rawStr;
@@ -217,7 +199,7 @@ export default function TranscriptPreview({
 
   // ── Editing handlers ───────────────────────────────────────
   const editSegText = (idx, text) => {
-    const next = segments.map((s, i) => (i === idx ? { ...s, text } : s));
+    const next = segments.map((s, i) => (i === idx ? { ...s, text, user_edited: true } : s));
     setSegments(next);
   };
 
@@ -227,7 +209,7 @@ export default function TranscriptPreview({
   };
 
   const saveInlineSegText = (idx) => {
-    const updatedSegments = segments.map((s, i) => (i === idx ? { ...s, text: editingSegValue } : s));
+    const updatedSegments = segments.map((s, i) => (i === idx ? { ...s, text: editingSegValue, user_edited: true } : s));
     setSegments(updatedSegments);
     setEditingSegIdx(null);
 
@@ -339,32 +321,16 @@ export default function TranscriptPreview({
         </div>
       </div>
 
-      {/* Legend + metrics */}
-      <div className="app-transcript-legend" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14, fontSize: 12.5, color: '#64748b', marginBottom: 10 }}>
-        <span>🟢 High (≥85%) — Clean Text</span>
-        <span>🟡 Medium (65–84%)</span>
-        <span style={{ color: '#991b1b', fontWeight: 600 }}>🔴 Low (&lt;50%) — Review & Edit</span>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 'auto', cursor: 'pointer', userSelect: 'none', color: '#0f766e', fontWeight: 600 }}>
-          <input
-            type="checkbox"
-            checked={showWordHighlights}
-            onChange={(e) => setShowWordHighlights(e.target.checked)}
-            style={{ accentColor: '#0d9488', cursor: 'pointer' }}
-          />
-          Word Highlights
-        </label>
+      <div className="app-transcript-legend" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 12.5, color: '#64748b', marginBottom: 10 }}>
+        <span>🟢 High (≥80%)</span>
+        <span>🟡 Medium (60–79%)</span>
+        <span>🔴 Low (&lt;60%)</span>
       </div>
-      {metrics && metrics.average != null && (
-        <div style={{
-          display: 'flex', gap: 20, background: '#f8fafc', border: '1px solid #e2e8f0',
-          borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#334155', marginBottom: 12,
-        }}>
-          <span>Avg: <strong style={{ color: confColor(metrics.average, 100, showWordHighlights).fg }}>{Math.round(normConf(metrics.average) || 0)}%</strong></span>
-          <span>Min: <strong>{Math.round(normConf(metrics.min) || 0)}%</strong></span>
-          <span>Max: <strong>{Math.round(normConf(metrics.max) || 0)}%</strong></span>
-          {metrics.low_confidence_percentage != null && (
-            <span>Low-conf: <strong>{metrics.low_confidence_percentage}%</strong></span>
-          )}
+      {metrics?.average != null && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '8px 14px', fontSize: 13, marginBottom: 12 }}>
+          <span>Avg: <strong>{Math.round(normConf(metrics.average))}%</strong></span>
+          {metrics.min != null && <span>Min: <strong>{Math.round(normConf(metrics.min))}%</strong></span>}
+          {metrics.max != null && <span>Max: <strong>{Math.round(normConf(metrics.max))}%</strong></span>}
         </div>
       )}
 
@@ -493,9 +459,7 @@ export default function TranscriptPreview({
         {currentList.map((seg, idx) => {
           const isRaw = view === 'raw';
           const ts = seg.start_time_formatted || seg.start_formatted || fmtTime(segStartSecs(seg));
-          const seg_conf = seg.confidence;
-          const dot = confDot(seg_conf);
-          const words = segWords(seg);
+          const score = normConf(seg.confidence);
           const isActive = !isRaw && idx === activeIdx;
           const start = segStartSecs(seg);
           const end = segEndSecs(seg);
@@ -517,7 +481,7 @@ export default function TranscriptPreview({
               }}
             >
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span>{dot}</span>
+                <span title="Model confidence">{confDot(score)}</span>
                 <span style={{ color: '#94a3b8', fontSize: 12, fontFamily: 'ui-monospace, monospace' }}>[{ts}]</span>
                 {!isRaw && (
                   <div
@@ -677,30 +641,12 @@ export default function TranscriptPreview({
                     }}
                     title="Double-click to edit segment text"
                   >
-                    {words.length > 0 ? (
-                      words.map((w, wi) => {
-                        const score = normConf(w.confidence);
-                        const { fg, bg, padding, borderRadius, borderBottom } = confColor(w, seg_conf, showWordHighlights);
-                        return (
-                          <span
-                            key={wi}
-                            title={score != null ? `${Math.round(score)}% confidence${score < 50 ? ' (Low — double click line to edit)' : ''}` : ''}
-                            style={{
-                              color: fg, background: bg, padding: padding || '0 2px',
-                              borderRadius: borderRadius || 3, borderBottom: borderBottom || 'none',
-                              marginRight: 2, display: 'inline-block',
-                            }}
-                          >{w.word}</span>
-                        );
-                      })
-                    ) : (
-                      <span style={{ color: confColor(seg.text, seg_conf, showWordHighlights).fg || '#2a2823' }}>{seg.text}</span>
-                    )}
+                    <span style={{ whiteSpace: 'pre-wrap' }}>{seg.text}</span>
                   </span>
                 )}
 
-                {seg_conf != null && (
-                  <span style={{ color: '#94a3b8', fontSize: 11 }}>({Math.round(normConf(seg_conf) || 0)}%)</span>
+                {score != null && (
+                  <span title="Model confidence" style={{ color: '#94a3b8', fontSize: 11 }}>({Math.round(score)}%)</span>
                 )}
               </div>
             </div>
