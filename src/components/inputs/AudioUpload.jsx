@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Upload, X, ShieldAlert, Sparkles, Crown, CheckCircle2, Lock, Zap, CreditCard, LockKeyhole, Loader2, ArrowRight } from 'lucide-react';
+import { Upload, X, ShieldAlert, Sparkles, Crown, CheckCircle2, Lock, Zap, CreditCard, LockKeyhole, Loader2, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Card, Label, Button, ProgressBar } from '../Card.jsx';
 import { uploadAudio, pollJob } from '../../api/client.js';
 import PaywallModal from '../PaywallModal.jsx';
@@ -46,8 +46,8 @@ const getAudioDuration = (f) => new Promise((resolve) => {
   audio.src = url;
 });
 
-export default function AudioUpload({ languages, onComplete }) {
-  const [file, setFile] = useState(null);
+export default function AudioUpload({ languages, onComplete, preloadedFile, onPreloadConsumed }) {
+  const [file, setFile] = useState(preloadedFile || null);
   const [tier, setTier] = useState('free'); // 'free' or 'premiere'
   const [isSubscribed, setIsSubscribed] = useState(() => {
     return localStorage.getItem('meeting_summarizer_subscribed') === 'true';
@@ -71,6 +71,14 @@ export default function AudioUpload({ languages, onComplete }) {
   const [dragOver, setDragOver] = useState(false);
   const [fileMeta, setFileMeta] = useState(null);
   const inputRef = useRef(null);
+
+  // When parent injects an SMRS preloaded file, set it as selected (no auto-process)
+  useEffect(() => {
+    if (preloadedFile) {
+      setFile(preloadedFile);
+      setError(null);
+    }
+  }, [preloadedFile]);
 
   const activeLimit = TIER_LIMITS[tier] || TIER_LIMITS.free;
 
@@ -180,6 +188,9 @@ export default function AudioUpload({ languages, onComplete }) {
     setFileMeta({ durationSec: 222, sizeMB: 14.8 });
     setIsSampleDemo(true);
     setError(null);
+    if (!f) {
+      onPreloadConsumed?.();
+    }
   };
 
   const process = async () => {
@@ -204,9 +215,9 @@ export default function AudioUpload({ languages, onComplete }) {
         setBusy(false);
         const sampleTd = {
           transcript: [
-            { start_time: 2.1, end_time: 12.4, start_time_formatted: "00:02", speaker: 0, text: "Welcome team to our Q3 product migration sync. Let's review feature scope and engineer assignments.", words: [ { word: "Welcome", confidence: 98 }, { word: "team", confidence: 96 }, { word: "Q3", confidence: 94 }, { word: "migration", confidence: 97 } ] },
-            { start_time: 14.2, end_time: 25.8, start_time_formatted: "00:14", speaker: 1, text: "The backend FastAPI services and Pyannote diarization pipeline are tested and ready for staging deployment.", words: [ { word: "backend", confidence: 99 }, { word: "FastAPI", confidence: 95 }, { word: "Pyannote", confidence: 92 } ] },
-            { start_time: 27.0, end_time: 38.5, start_time_formatted: "00:27", speaker: 0, text: "Awesome. Alice will finalize the UI sprint board by Friday, and Bob will deploy the staging build.", words: [ { word: "Alice", confidence: 99 }, { word: "finalize", confidence: 96 }, { word: "Bob", confidence: 98 } ] }
+            { start_time: 2.1, end_time: 12.4, start_time_formatted: "00:02", speaker: 0, text: "Welcome team to our Q3 product migration sync. Let's review feature scope and engineer assignments.", words: [{ word: "Welcome", confidence: 98 }, { word: "team", confidence: 96 }, { word: "Q3", confidence: 94 }, { word: "migration", confidence: 97 }] },
+            { start_time: 14.2, end_time: 25.8, start_time_formatted: "00:14", speaker: 1, text: "The backend FastAPI services and Pyannote diarization pipeline are tested and ready for staging deployment.", words: [{ word: "backend", confidence: 99 }, { word: "FastAPI", confidence: 95 }, { word: "Pyannote", confidence: 92 }] },
+            { start_time: 27.0, end_time: 38.5, start_time_formatted: "00:27", speaker: 0, text: "Awesome. Alice will finalize the UI sprint board by Friday, and Bob will deploy the staging build.", words: [{ word: "Alice", confidence: 99 }, { word: "finalize", confidence: 96 }, { word: "Bob", confidence: 98 }] }
           ],
           metrics: { average: 96.2, min: 92, max: 99, low_confidence_percentage: 0 },
           language: "en"
@@ -260,6 +271,7 @@ export default function AudioUpload({ languages, onComplete }) {
           .map((seg) => `[${seg.start_time_formatted || ''}] Speaker ${seg.speaker || '?'}: ${seg.text || ''}`)
           .join('\n');
       }
+      onPreloadConsumed?.();
       onComplete({
         transcript: transcriptText,
         transcriptData,
@@ -283,6 +295,9 @@ export default function AudioUpload({ languages, onComplete }) {
     const f = e.dataTransfer.files?.[0];
     if (f) await pickFile(f);
   };
+
+  // Detect SMRS-loaded file (named with _decrypted.wav suffix or flagged)
+  const isSmrsFile = file?.name?.includes('_decrypted') || file?._smrs;
 
   return (
     <Card>
@@ -385,6 +400,22 @@ export default function AudioUpload({ languages, onComplete }) {
         </div>
       </div>
 
+      {/* SMRS file badge */}
+      {isSmrsFile && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          marginBottom: 14, padding: '8px 12px',
+          background: 'rgba(13,148,136,0.08)',
+          border: '1px solid rgba(13,148,136,0.25)',
+          borderRadius: 9, fontSize: 12.5,
+        }}>
+          <ShieldCheck size={14} color="#0d9488" />
+          <span style={{ color: '#0f766e', fontWeight: 600 }}>
+            Loaded from SMRS device — decrypted &amp; ready
+          </span>
+        </div>
+      )}
+
       <div className="app-form-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <div>
           <Label>Audio language</Label>
@@ -412,8 +443,8 @@ export default function AudioUpload({ languages, onComplete }) {
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
         style={{
-          border: `2px dashed ${dragOver ? activeLimit.badgeColor : '#cbd5e1'}`,
-          background: dragOver ? `${activeLimit.badgeColor}0d` : '#f8fafc',
+          border: `2px dashed ${isSmrsFile ? '#0d9488' : dragOver ? activeLimit.badgeColor : '#cbd5e1'}`,
+          background: isSmrsFile ? 'rgba(13,148,136,0.04)' : dragOver ? `${activeLimit.badgeColor}0d` : '#f8fafc',
           borderRadius: 14, padding: '30px 20px', textAlign: 'center', cursor: 'pointer',
           transition: 'border-color .15s ease, background .15s ease',
         }}
@@ -425,12 +456,14 @@ export default function AudioUpload({ languages, onComplete }) {
           hidden
           onChange={(e) => pickFile(e.target.files?.[0])}
         />
-        <Upload size={26} color="#64748b" style={{ margin: '0 auto 10px' }} />
+        <Upload size={26} color={isSmrsFile ? '#0d9488' : '#64748b'} style={{ margin: '0 auto 10px' }} />
         <div style={{ fontWeight: 600, color: '#111' }}>
           {file ? file.name : 'Drop audio here, or click to browse'}
         </div>
         <div style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 4 }}>
-          WAV · MP3 · M4A (Max {activeLimit.maxSizeMB} MB &amp; {activeLimit.maxDurationSec / 60} mins on {activeLimit.name})
+          {file
+            ? `${(file.size / (1024 * 1024)).toFixed(2)} MB · Audio file loaded & ready`
+            : 'WAV · MP3 · M4A · up to a few hundred MB'}
         </div>
 
         {fileMeta && (

@@ -4,32 +4,81 @@
 
 /* Page bg matches profile-website: oklch(0.99 0.001 250) — a very
    subtle cool near-white. Falls back to sRGB hex for older browsers. */
-html, body { margin: 0; padding: 0; background: #fafbfc; background: oklch(0.99 0.001 250); }
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #fafbfc;
+  background: oklch(0.99 0.001 250);
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   color: #0f172a;
 }
-::selection { background: #0d948844; }
+
+::selection {
+  background: #0d948844;
+}
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(28px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @keyframes marqueeScroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }
-@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.25;
+  }
+}
 
 @keyframes wordReveal {
-  from { opacity: 0; transform: translateY(20px); filter: blur(3px); }
-  to   { opacity: 1; transform: translateY(0);    filter: blur(0px); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
 }
+
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -49,16 +98,35 @@ body {
    section. Solid page-bg colour here masks that bleed. Same colour as
    body, so the wrapper is visually invisible — the floating-pill aesthetic
    is preserved at every scroll position. */
-.lp-nav-wrap { background: #fafbfc; }
+.lp-nav-wrap {
+  background: #fafbfc;
+}
 
 @media (max-width: 640px) {
-  .lp-nav-pill { flex-wrap: wrap !important; gap: 10px !important; padding: 12px 16px !important; }
-  .lp-nav-links { gap: 18px !important; font-size: 13px !important; }
-  .lp-nav-wordmark { font-size: 14.5px !important; }
-  .lp-nav-tagline { display: none !important; }
+  .lp-nav-pill {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    padding: 12px 16px !important;
+  }
+
+  .lp-nav-links {
+    gap: 18px !important;
+    font-size: 13px !important;
+  }
+
+  .lp-nav-wordmark {
+    font-size: 14.5px !important;
+  }
+
+  .lp-nav-tagline {
+    display: none !important;
+  }
 }
+
 @media (max-width: 460px) {
-  .lp-nav-links { display: none !important; }
+  .lp-nav-links {
+    display: none !important;
+  }
 }
 
 /* ── Landing: Hero ── */
@@ -68,14 +136,40 @@ body {
     gap: 36px !important;
     padding: 40px 20px 24px !important;
   }
-  .lp-hero-h1 { font-size: 46px !important; margin: 22px 0 20px !important; }
-  .lp-hero-sub { font-size: 16.5px !important; max-width: 100% !important; }
+
+  .lp-hero-h1 {
+    font-size: 46px !important;
+    margin: 22px 0 20px !important;
+  }
+
+  .lp-hero-sub {
+    font-size: 16.5px !important;
+    max-width: 100% !important;
+  }
 }
+
 @media (max-width: 560px) {
-  .lp-hero-h1 { font-size: 36px !important; line-height: 1.1 !important; }
-  .lp-hero-badge { font-size: 12.5px !important; padding: 8px 14px !important; }
-  .lp-hero-ctas { flex-direction: column !important; align-items: stretch !important; width: 100% !important; }
-  .lp-hero-ctas > a { text-align: center !important; padding: 14px 28px !important; font-size: 15px !important; }
+  .lp-hero-h1 {
+    font-size: 36px !important;
+    line-height: 1.1 !important;
+  }
+
+  .lp-hero-badge {
+    font-size: 12.5px !important;
+    padding: 8px 14px !important;
+  }
+
+  .lp-hero-ctas {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  .lp-hero-ctas>a {
+    text-align: center !important;
+    padding: 14px 28px !important;
+    font-size: 15px !important;
+  }
 }
 
 /* ── Landing: Features (sticky cards) ── */
@@ -100,17 +194,30 @@ body {
        `top: CARD_TOP` (=226px) that Landing.jsx sets from a JS constant. */
     top: 280px !important;
   }
-  .lp-feature-card h3 { font-size: 24px !important; }
-  .lp-features-section { margin: 72px auto 72px !important; }
+
+  .lp-feature-card h3 {
+    font-size: 24px !important;
+  }
+
+  .lp-features-section {
+    margin: 72px auto 72px !important;
+  }
+
   /* Tighten line-height so heading height is predictable (browser default
      'normal' for Manrope is ~1.4, which made the pinned block taller than
      the JS-reserved space and pushed it onto the card below). */
-  .lp-features-heading h2 { font-size: 28px !important; line-height: 1.15 !important; }
+  .lp-features-heading h2 {
+    font-size: 28px !important;
+    line-height: 1.15 !important;
+  }
 }
+
 /* Very narrow phones: shrink the h2 one more notch so it doesn't wrap to
    3 lines, keeping the pinned heading + card gap consistent. */
 @media (max-width: 400px) {
-  .lp-features-heading h2 { font-size: 24px !important; }
+  .lp-features-heading h2 {
+    font-size: 24px !important;
+  }
 }
 
 /* ── Landing: How it works ── */
@@ -119,10 +226,24 @@ body {
     grid-template-columns: 1fr !important;
     row-gap: 36px !important;
   }
-  .lp-how-step, .lp-how-title-block { grid-column: 1 !important; grid-row: auto !important; }
-  .lp-how-arrow { display: none !important; }
-  .how-num { font-size: 96px !important; }
-  .lp-how-heading h2 { font-size: 30px !important; }
+
+  .lp-how-step,
+  .lp-how-title-block {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
+  .lp-how-arrow {
+    display: none !important;
+  }
+
+  .how-num {
+    font-size: 96px !important;
+  }
+
+  .lp-how-heading h2 {
+    font-size: 30px !important;
+  }
 }
 
 /* ── Landing: Security card ── */
@@ -132,24 +253,49 @@ body {
     padding: 40px 28px !important;
     gap: 28px !important;
   }
-  .lp-security-h3 { font-size: 28px !important; }
+
+  .lp-security-h3 {
+    font-size: 28px !important;
+  }
 }
+
 @media (max-width: 480px) {
-  .lp-security-card { padding: 32px 20px !important; }
+  .lp-security-card {
+    padding: 32px 20px !important;
+  }
 }
 
 /* ── Landing: CTA + Footer ── */
 @media (max-width: 640px) {
-  .lp-cta h2 { font-size: 30px !important; }
-  .lp-cta h2 br { display: none !important; }
-  .lp-cta p { font-size: 15px !important; }
-  .lp-footer { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
-  .lp-footer-links { flex-wrap: wrap !important; gap: 18px !important; }
+  .lp-cta h2 {
+    font-size: 30px !important;
+  }
+
+  .lp-cta h2 br {
+    display: none !important;
+  }
+
+  .lp-cta p {
+    font-size: 15px !important;
+  }
+
+  .lp-footer {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+
+  .lp-footer-links {
+    flex-wrap: wrap !important;
+    gap: 18px !important;
+  }
 }
 
 /* Tighter section rhythm on mobile */
 @media (max-width: 768px) {
-  .lp-section-gap { margin-top: 80px !important; }
+  .lp-section-gap {
+    margin-top: 80px !important;
+  }
 }
 
 /* ── Landing: uniform mobile section rhythm ─────────────────────────────
@@ -163,7 +309,10 @@ body {
     /* Was `margin: 72px auto 72px`. Bottom is now owned by the next section. */
     margin: 96px auto 0 !important;
   }
-  #how, #security, .lp-cta {
+
+  #how,
+  #security,
+  .lp-cta {
     margin-top: 96px !important;
   }
 }
@@ -179,37 +328,72 @@ body {
    taps to close; a sticky top menubar exposes the hamburger.
    The mobile-only chrome (menubar, backdrop, close button) is hidden
    at desktop widths below. */
-.app-mobile-menubar { display: none; }
-.app-sidebar-close   { display: none; }
-.app-sidebar-backdrop { display: none; }
+.app-mobile-menubar {
+  display: none;
+}
+
+.app-sidebar-close {
+  display: none;
+}
+
+.app-sidebar-backdrop {
+  display: none;
+}
 
 @media (max-width: 900px) {
+
   /* Mobile top bar — sticky, holds the hamburger + wordmark */
   .app-mobile-menubar {
-    display: flex; align-items: center; gap: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     background: #ffffff;
     border-bottom: 1px solid #e2e8f0;
     padding: 12px 16px;
-    position: sticky; top: 0; z-index: 40;
+    position: sticky;
+    top: 0;
+    z-index: 40;
   }
+
   .app-mobile-menubtn {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; padding: 0;
-    border: 1px solid #e2e8f0; border-radius: 10px;
-    background: #f8fafc; color: #0f172a; cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #0f172a;
+    cursor: pointer;
   }
-  .app-mobile-menubtn:active { background: #e2e8f0; }
+
+  .app-mobile-menubtn:active {
+    background: #e2e8f0;
+  }
+
   .app-mobile-wordmark {
-    font-family: 'Manrope', sans-serif; font-weight: 800;
-    font-size: 15px; letter-spacing: -0.01em; color: #0f172a;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    color: #0f172a;
   }
-  .app-sidebar-close { display: inline-flex; }
+
+  .app-sidebar-close {
+    display: inline-flex;
+  }
 
   /* Off-canvas drawer */
-  .app-shell { flex-direction: column !important; }
+  .app-shell {
+    flex-direction: column !important;
+  }
+
   .app-sidebar {
     position: fixed !important;
-    top: 0 !important; left: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
     height: 100vh !important;
     height: 100svh !important;
     width: 288px !important;
@@ -223,74 +407,209 @@ body {
     border-right: 1px solid #e2e8f0 !important;
     border-bottom: none !important;
   }
-  .app-sidebar.is-open { transform: translateX(0); }
+
+  .app-sidebar.is-open {
+    transform: translateX(0);
+  }
 
   /* Scrim behind the drawer — tap to close */
   .app-sidebar-backdrop {
     display: block;
-    position: fixed; inset: 0;
+    position: fixed;
+    inset: 0;
     background: rgba(15, 23, 42, 0.42);
     z-index: 55;
     opacity: 0;
     pointer-events: none;
     transition: opacity .22s ease;
   }
-  .app-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
 
-  .app-sidebar-group-title { font-size: 10.5px !important; padding-bottom: 6px !important; }
-  .app-sidebar-newsession { margin-bottom: 14px !important; padding: 9px 12px !important; }
-  .app-main { padding: 20px 20px 60px !important; }
-  .app-view-header h1 { font-size: 24px !important; }
+  .app-sidebar-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .app-sidebar-group-title {
+    font-size: 10.5px !important;
+    padding-bottom: 6px !important;
+  }
+
+  .app-sidebar-newsession {
+    margin-bottom: 14px !important;
+    padding: 9px 12px !important;
+  }
+
+  .app-main {
+    padding: 20px 20px 60px !important;
+  }
+
+  .app-view-header h1 {
+    font-size: 24px !important;
+  }
 }
+
 @media (max-width: 640px) {
-  .app-main { padding: 16px 14px 48px !important; }
-  .app-view-header h1 { font-size: 20px !important; }
-  .app-view-header p { font-size: 13.5px !important; }
+  .app-main {
+    padding: 16px 14px 48px !important;
+  }
+
+  .app-view-header h1 {
+    font-size: 20px !important;
+  }
+
+  .app-view-header p {
+    font-size: 13.5px !important;
+  }
 }
 
 /* Common 2-col form grids → 1-col */
 @media (max-width: 700px) {
-  .app-form-2col { grid-template-columns: 1fr !important; }
+  .app-form-2col {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* SummaryView: report 2-col → 1-col */
 @media (max-width: 900px) {
-  .app-summary-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+  .app-summary-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
 }
 
 /* SummaryView download buttons: top-right beside tabs on desktop, bottom
    of the card on mobile — keeps the mobile top row clean for the tabs. */
-.app-downloads-bottom { display: none !important; }
+.app-downloads-bottom {
+  display: none !important;
+}
+
 @media (max-width: 700px) {
-  .app-downloads-top    { display: none !important; }
-  .app-downloads-bottom { display: flex !important; }
+  .app-downloads-top {
+    display: none !important;
+  }
+
+  .app-downloads-bottom {
+    display: flex !important;
+  }
 }
 
 /* TranscriptPreview */
 @media (max-width: 640px) {
-  .app-transcript-legend { gap: 8px !important; font-size: 11.5px !important; }
-  .app-transcript-legend > span:last-child { flex-basis: 100% !important; margin-left: 0 !important; }
-  .app-audio-player { flex-wrap: wrap !important; }
-  .app-audio-player input[type="range"] { flex: 1 1 100% !important; order: 3; }
+  .app-transcript-legend {
+    gap: 8px !important;
+    font-size: 11.5px !important;
+  }
+
+  .app-transcript-legend>span:last-child {
+    flex-basis: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .app-audio-player {
+    flex-wrap: wrap !important;
+  }
+
+  .app-audio-player input[type="range"] {
+    flex: 1 1 100% !important;
+    order: 3;
+  }
 }
+
 @media (max-width: 480px) {
-  .app-rename-row { grid-template-columns: 1fr !important; gap: 4px !important; }
+  .app-rename-row {
+    grid-template-columns: 1fr !important;
+    gap: 4px !important;
+  }
 }
 
 /* GenerateBar (participants + summarise CTA) */
 @media (max-width: 700px) {
-  .app-generatebar { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .app-generatebar {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
 }
 
 /* Card padding tightens on mobile */
 @media (max-width: 640px) {
-  .app-card { padding: 18px !important; }
+  .app-card {
+    padding: 18px !important;
+  }
 }
 
 /* Results tabs scroll horizontally when they overflow */
 @media (max-width: 720px) {
-  .app-results-tabs { overflow-x: auto !important; flex-wrap: nowrap !important; white-space: nowrap !important; }
-  .app-results-tabs::-webkit-scrollbar { display: none; }
+  .app-results-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+  }
+
+  .app-results-tabs::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SMRS Panel — Drawer animations & terminal styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes smrsSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes smrsFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes smrsSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes smrsPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0px rgba(245, 158, 11, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 5px rgba(245, 158, 11, 0);
+  }
+}
+
+/* Scrollbar styling for SMRS terminal */
+.smrs-terminal::-webkit-scrollbar {
+  width: 4px;
+}
+
+.smrs-terminal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.smrs-terminal::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 4px;
 }
 
 /* ── Input Method Tabs Mobile Responsiveness ── */
@@ -302,6 +621,7 @@ body {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
   }
+
   .app-input-tab-btn {
     padding: 9px 12px !important;
     font-size: 13px !important;
@@ -317,7 +637,8 @@ body {
     gap: 10px !important;
     padding: 12px !important;
   }
-  .app-tier-switcher > div {
+
+  .app-tier-switcher>div {
     justify-content: space-between !important;
     width: 100% !important;
   }
@@ -325,12 +646,18 @@ body {
 
 /* ── Touch Target & Button Responsiveness ── */
 @media (max-width: 480px) {
-  button, input, select, textarea {
+
+  button,
+  input,
+  select,
+  textarea {
     font-size: 14px !important;
   }
+
   .app-view-header {
     margin-bottom: 16px !important;
   }
+
   .app-view-header h1 {
     font-size: 19px !important;
   }

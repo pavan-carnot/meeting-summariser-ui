@@ -15,6 +15,8 @@ import { Card, SectionTitle } from '../components/Card.jsx';
 import {
   getLanguages, extractParticipants, summarize, pollJob,
 } from '../api/client.js';
+import SmrsPanel from '../components/SmrsPanel.jsx';
+import AppNavbar from '../components/AppNavbar.jsx';
 
 const INPUT_VIEWS = new Set(['audio', 'realtime', 'paste', 'text']);
 const RESULT_VIEWS = new Set(['audio-player', 'transcript', 'confidence', 'report']);
@@ -38,6 +40,18 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
   const handleNavigate = (view) => { setActiveView(view); closeSidebar(); };
+
+  // SMRS panel state
+  const [smrsPanelOpen, setSmrsPanelOpen] = useState(false);
+  const [smrsConnected, setSmrsConnected] = useState(false);
+  const [smrsPreloadedFile, setSmrsPreloadedFile] = useState(null);
+
+  const handleSmrsLoadFile = (wavFile) => {
+    // Stage wav file into AudioUpload component in main UI without auto-processing
+    setSmrsPreloadedFile(wavFile);
+    setActiveView('audio');
+    setSmrsPanelOpen(false);
+  };
 
   // Transcript state — persisted across view switches
   const [transcript, setTranscript] = useState('');
@@ -194,6 +208,7 @@ export default function App() {
     setSummaryError(null);
     setSummaryProgress(0);
     setSummaryStatus('');
+    setSmrsPreloadedFile(null);
     setActiveView('audio');
   };
 
@@ -205,6 +220,17 @@ export default function App() {
 
   return (
     <div style={{ background: '#ffffff', minHeight: '100vh' }}>
+      {/* Desktop top navbar with SMRS button */}
+      <AppNavbar onOpenSmrs={() => setSmrsPanelOpen(true)} smrsConnected={smrsConnected} />
+
+      {/* SMRS slide-over panel */}
+      <SmrsPanel
+        open={smrsPanelOpen}
+        onClose={() => setSmrsPanelOpen(false)}
+        onLoadFile={handleSmrsLoadFile}
+        onConnectionChange={setSmrsConnected}
+      />
+
       {/* Mobile top bar — hamburger + wordmark. Hidden on desktop via CSS.
           Sits inside the flow so the main content pushes down under it. */}
       <div className="app-mobile-menubar">
@@ -261,7 +287,12 @@ export default function App() {
 
           {/* Input views */}
           {activeView === 'audio' && (
-            <AudioUpload languages={languages} onComplete={handleTranscriptFromAudio} />
+            <AudioUpload
+              languages={languages}
+              onComplete={handleTranscriptFromAudio}
+              preloadedFile={smrsPreloadedFile}
+              onPreloadConsumed={() => setSmrsPreloadedFile(null)}
+            />
           )}
           {activeView === 'realtime' && (
             <LiveRecording languages={languages} onComplete={handleTranscriptFromAudio} />
